@@ -2,6 +2,8 @@
 
 CodeGPT is a plugin for neovim that provides commands to interact with ChatGPT. The focus is around code related usages. So code completion, refactorings, generating docs, etc.
 
+This is a fork of the original repository of @dpayne which disappeared.
+
 ## Installation
 
 * Set environment variable `OPENAI_API_KEY` to your [openai api key](https://platform.openai.com/account/api-keys).
@@ -12,7 +14,7 @@ Installing with Lazy.
 
 ```lua
 {
-    "dpayne/CodeGPT.nvim",
+    "blob42/CodeGPT.nvim",
     dependencies = {
       'nvim-lua/plenary.nvim',
       'MunifTanjim/nui.nvim',
@@ -27,7 +29,7 @@ Installing with packer.
 
 ```lua
 use({
-   "dpayne/CodeGPT.nvim",
+   "blob42/CodeGPT.nvim",
    requires = {
       "MunifTanjim/nui.nvim",
       "nvim-lua/plenary.nvim",
@@ -43,7 +45,7 @@ Installing with plugged.
 ```vim
 Plug("nvim-lua/plenary.nvim")
 Plug("MunifTanjim/nui.nvim")
-Plug("dpayne/CodeGPT.nvim")
+Plug("blob42/CodeGPT.nvim")
 ```
 
 Installing OpenAI's tokenizer
@@ -421,3 +423,8 @@ vim.g["codegpt_commands"] = {
 * Code related usages.
 * Simple.
 * Easy to add custom commands.
+
+# Credit
+
+@dpayne original creator whose account does not exist anymore. I wish to
+whomever it is that they are in good health. 
