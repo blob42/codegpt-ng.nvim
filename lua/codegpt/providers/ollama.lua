@@ -3,6 +3,7 @@ local Render = require("codegpt.template_render")
 local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
+local Tokens = require("codegpt.tokens")
 
 OllaMaProvider = {}
 
@@ -24,10 +25,7 @@ local function generate_messages(command, cmd_opts, command_args, text_selection
 end
 
 local function get_max_tokens(max_tokens, prompt)
-	local ok, total_length = Utils.get_accurate_tokens(prompt)
-	if not ok then
-		error("Could not calculate total token length")
-	end
+	local total_length = Tokens.get_tokens(prompt)
 
 	if total_length >= max_tokens then
 		error("Total length of messages exceeds max_tokens: " .. total_length .. " > " .. max_tokens)
