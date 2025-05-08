@@ -1,7 +1,9 @@
+local config = require("codegpt.config")
+local M = {}
+
 local Commands = require("codegpt.commands")
 local CommandsList = require("codegpt.commands_list")
 local Utils = require("codegpt.utils")
-local CodeGptModule = {}
 
 local function has_command_args(opts)
 	local pattern = "%{%{command_args%}%}"
@@ -9,11 +11,11 @@ local function has_command_args(opts)
 		or string.find(opts.system_message_template or "", pattern)
 end
 
-function CodeGptModule.get_status(...)
+function M.get_status(...)
 	return Commands.get_status(...)
 end
 
-function CodeGptModule.run_cmd(opts)
+function M.run_cmd(opts)
 	local text_selection = Utils.get_selected_lines()
 	local command_args = table.concat(opts.fargs, " ")
 
@@ -48,4 +50,6 @@ function CodeGptModule.run_cmd(opts)
 	Commands.run_cmd(command, command_args, text_selection)
 end
 
-return CodeGptModule
+M.setup = config.setup
+
+return M
