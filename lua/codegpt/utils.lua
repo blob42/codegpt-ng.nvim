@@ -83,7 +83,7 @@ function Utils.trim_to_code_block(lines)
 end
 
 function Utils.parse_lines(response_text)
-	if config.options.write_response_to_err_log then
+	if config.opts.write_response_to_err_log then
 		vim.api.nvim_err_write("ChatGPT response: \n" .. response_text .. "\n")
 	end
 

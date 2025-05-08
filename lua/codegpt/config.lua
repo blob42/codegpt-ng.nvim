@@ -1,46 +1,38 @@
 ---@class CodegptConfig
 local M = {}
 
-if os.getenv("OPENAI_API_KEY") ~= nil then
-	vim.g["codegpt_openai_api_key"] = os.getenv("OPENAI_API_KEY")
-end
-vim.g["codegpt_chat_completions_url"] = "https://api.openai.com/v1/chat/completions"
-
--- Read old config if it exists
-if vim.g["codegpt_openai_api_provider"] and #vim.g["codegpt_openai_api_provider"] > 0 then
-	vim.g["codegpt_api_provider"] = vim.g["codegpt_openai_api_provider"]
-end
-
--- alternative provider
-vim.g["codegpt_api_provider"] = vim.g["codegpt_api_provider"] or "openai"
+-- -- Read old config if it exists
+-- if vim.g["codegpt_openai_api_provider"] and #vim.g["codegpt_openai_api_provider"] > 0 then
+-- 	vim.g["codegpt_api_provider"] = vim.g["codegpt_openai_api_provider"]
+-- end
 
 -- clears visual selection after completion
-vim.g["codegpt_clear_visual_selection"] = true
+-- vim.g["codegpt_clear_visual_selection"] = true
 
-vim.g["codegpt_hooks"] = {
-	request_started = nil,
-	request_finished = nil,
-}
+-- vim.g["codegpt_hooks"] = {
+-- 	request_started = nil,
+-- 	request_finished = nil,
+-- }
 
 -- Border style to use for the popup
-vim.g["codegpt_popup_border"] = { style = "rounded" }
+-- vim.g["codegpt_popup_border"] = { style = "rounded" }
 
 -- Wraps the text on the popup window, deprecated in favor of codegpt_popup_window_options
-vim.g["codegpt_wrap_popup_text"] = true
+-- vim.g["codegpt_wrap_popup_text"] = true
 
-vim.g["codegpt_popup_window_options"] = {}
+-- vim.g["codegpt_popup_window_options"] = {}
 
 -- set the filetype of a text popup is markdown
-vim.g["codegpt_text_popup_filetype"] = "markdown"
+-- vim.g["codegpt_text_popup_filetype"] = "markdown"
 
 -- Set the type of ui to use for the popup, options are "popup", "vertical" or "horizontal"
-vim.g["codegpt_popup_type"] = "popup"
+-- vim.g["codegpt_popup_type"] = "popup"
 
 -- Set the height of the horizontal popup
-vim.g["codegpt_horizontal_popup_size"] = "20%"
+-- vim.g["codegpt_horizontal_popup_size"] = "20%"
 
 -- Set the width of the vertical popup
-vim.g["codegpt_vertical_popup_size"] = "20%"
+-- vim.g["codegpt_vertical_popup_size"] = "20%"
 
 vim.g["codegpt_commands_defaults"] = {
 	["completion"] = {
@@ -129,26 +121,74 @@ vim.g["codegpt_ui_custom_commands"] = {}
 ---@field params? table Custom parameters to include with this model query
 local Model = {}
 
----@alias ModelDef { [string]: Model }
+---@alias ModelDef { [string] : Model}
+
+---@alias Hook fun()
+
+---@class Connection
+---@field chat_completions_url? string OpenAI API compatible API endpoint
+---@field openai_api_key? string https://platform.openai.com/account/api-keys
+---@field api_provider? string Type of provider for the OpenAI API endpoint
+---@field proxy? string Proxy to use when making API requests
+
+---@class UiOptions
+---@field popup_border {style:string} Border style to use for the popup
+---@field wrap_popup_text boolean Wraps the text on the popup window, deprecated in favor of codegpt_popup_window_options
+---@field popup_window_options {}
+---@field text_popup_filetype string set the filetype of the text popup
+---@field popup_type "popup" | "vertical" | "horizontal" Set the type of ui to use for the popup
+---@field horizontal_popup_size string Set the height of the horizontal popup
+---@field vertical_popup_size string Set the width of the vertical popup
 
 ---@class CodegptOptions
+---@field connection Connection Connection parameters
+---@field ui UiOptions display parameters
 ---@field models? table<provider, ModelDef> Model configs grouped by provider
----@field chat_completions_url? string OpenAI API compatible API endpoint
----@field api_provider? string Type of provider for the OpenAI API endpoint
 ---@field write_response_to_err_log? boolean Log model answers to error buffer
+---@field clear_visual_selection boolean Clears visual selection after completion
+---@field hooks { request_started?:Hook,  request_finished?:Hook}
+
+---FIXME: merge with class above
+---@type CodegptOptions
 local defaults = {
-	-- models = {
-	-- 	ollama = { ["test"] = { language_instructions = "test" } },
-	-- },
+	connection = {
+		api_provider = "openai",
+		chat_completions_url = "https://api.openai.com/v1/chat/completions",
+	},
+	ui = {
+		popup_border = { style = "rounded" },
+		wrap_popup_text = true,
+		popup_window_options = {},
+		text_popup_filetype = "markdown",
+		popup_type = "popup",
+		horizontal_popup_size = "20%",
+		vertical_popup_size = "20%",
+	},
+	api_provider = "openai",
+	models = {
+		ollama = { ["test"] = { language_instructions = "test" } },
+	},
+	clear_visual_selection = true,
+	hooks = {
+		request_started = nil,
+		request_finished = nil,
+	},
 }
 
 ---@type CodegptOptions
-M.options = {}
+---@diagnostic disable-next-line
+M.opts = {}
 
 ---@param options? CodegptOptions
 M.setup = function(options)
-	M.config = vim.tbl_deep_extend("force", {}, defaults, options or {})
-	-- print(vim.inspect(M.config))
+	M.opts = vim.tbl_deep_extend("force", {}, defaults, options or {})
+
+	-- env takes precedences
+	if os.getenv("OPENAI_API_KEY") ~= nil then
+		M.opts.connection.openai_api_key = os.getenv("OPENAI_API_KEY")
+	end
+
+	print(vim.inspect(M.opts))
 end
 
 return M

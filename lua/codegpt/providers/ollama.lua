@@ -2,6 +2,7 @@ local curl = require("plenary.curl")
 local Render = require("codegpt.template_render")
 local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
+local Config = require("codegpt.config")
 
 OllaMaProvider = {}
 
@@ -24,6 +25,9 @@ end
 
 local function get_max_tokens(max_tokens, prompt)
 	local ok, total_length = Utils.get_accurate_tokens(prompt)
+	if not ok then
+		error("Could not calculate total token length")
+	end
 
 	if total_length >= max_tokens then
 		error("Total length of messages exceeds max_tokens: " .. total_length .. " > " .. max_tokens)
@@ -35,8 +39,9 @@ end
 function OllaMaProvider.make_request(command, cmd_opts, command_args, text_selection)
 	-- NOTE Do not use the system message for now
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
+
 	-- max # of tokens to generate
-	local max_tokens = get_max_tokens(cmd_opts.max_tokens, prompt)
+	local max_tokens = get_max_tokens(cmd_opts.max_tokens, messages)
 
 	local request = {
 		-- TODO!: test that params are sent, debug ollama api
@@ -72,7 +77,7 @@ function OllaMaProvider.handle_response(json, cb)
 				print("Error: No response text " .. type(response_text))
 			else
 				local bufnr = vim.api.nvim_get_current_buf()
-				if vim.g["codegpt_clear_visual_selection"] then
+				if Config.opts.clear_visual_selection then
 					vim.api.nvim_buf_set_mark(bufnr, "<", 0, 0, {})
 					vim.api.nvim_buf_set_mark(bufnr, ">", 0, 0, {})
 				end
@@ -109,7 +114,7 @@ end
 function OllaMaProvider.make_call(payload, cb)
 	local payload_str = vim.fn.json_encode(payload)
 	local default_url = "http://localhost:11434/api/chat"
-	local url = vim.g["codegpt_chat_completions_url"] or default_url
+	local url = Config.opts.connection.chat_completions_url or default_url
 	local headers = OllaMaProvider.make_headers()
 	Api.run_started_hook()
 	curl.post(url, {
