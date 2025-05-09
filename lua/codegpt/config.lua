@@ -151,6 +151,7 @@ local Model = {}
 ---@field popup_window_options {}
 ---@field popup_options? table nui.nvim popup options
 ---@field persistent? boolean Do not close popup window on mouse leave. Useful with vertical and horizontal layouts.
+---@field commands table
 ---@field text_popup_filetype string Set the filetype of the text popup
 ---@field popup_type "popup" | "vertical" | "horizontal" Set the type of ui to use for the popup
 ---@field horizontal_popup_size string Set the height of the horizontal popup
@@ -186,6 +187,11 @@ local defaults = {
 		-- spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
 		spinners = { "", "", "", "", "", "" },
 		spinner_speed = 80, -- higher is slower
+		commands = {
+			quit = "q", -- key to quit the popup
+			use_as_output = "<c-o>", -- key to use the popup content as output and replace the original lines
+			use_as_input = "<c-i>", -- key to use the popup content as input for a new API request
+		},
 	},
 	models = {
 		ollama = { ["test"] = { language_instructions = "test" } },

@@ -2,7 +2,6 @@ local Popup = require("nui.popup")
 local Split = require("nui.split")
 local Config = require("codegpt.config")
 local event = require("nui.utils.autocmd").event
-local config = require("codegpt.config")
 
 local M = {}
 
@@ -13,7 +12,7 @@ local function setup_ui_element(lines, filetype, bufnr, start_row, start_col, en
 	-- mount/open the component
 	ui_elem:mount()
 
-	if not (config.persistent_override or config.opts.ui.persistent) then
+	if not (Config.persistent_override or Config.opts.ui.persistent) then
 		-- unmount component when cursor leaves buffer
 		ui_elem:on(event.BufLeave, function()
 			ui_elem:unmount()
@@ -21,7 +20,7 @@ local function setup_ui_element(lines, filetype, bufnr, start_row, start_col, en
 	end
 
 	-- unmount component when key 'q'
-	ui_elem:map("n", vim.g["codegpt_ui_commands"].quit, function()
+	ui_elem:map("n", Config.opts.ui.commands.quit, function()
 		ui_elem:unmount()
 	end, { noremap = true, silent = true })
 
@@ -30,14 +29,14 @@ local function setup_ui_element(lines, filetype, bufnr, start_row, start_col, en
 	vim.api.nvim_buf_set_lines(ui_elem.bufnr, 0, 1, false, lines)
 
 	-- replace lines when ctrl-o pressed
-	ui_elem:map("n", vim.g["codegpt_ui_commands"].use_as_output, function()
+	ui_elem:map("n", Config.opts.ui.commands.use_as_output, function()
 		vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
 		ui_elem:unmount()
 	end)
 
 	-- selecting all the content when ctrl-i is pressed
 	-- so the user can proceed with another API request
-	ui_elem:map("n", vim.g["codegpt_ui_commands"].use_as_input, function()
+	ui_elem:map("n", Config.opts.ui.commands.use_as_input, function()
 		vim.api.nvim_feedkeys("ggVG:Chat ", "n", false)
 	end, { noremap = false })
 
@@ -96,7 +95,7 @@ local function create_popup()
 		popup = Popup(popupOpts)
 	end
 
-	popup:update_layout(config.opts.ui.popup_options)
+	popup:update_layout(Config.opts.ui.popup_options)
 
 	return popup
 end
