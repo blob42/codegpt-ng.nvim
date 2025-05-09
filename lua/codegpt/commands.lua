@@ -1,6 +1,7 @@
 local CommandsList = require("codegpt.commands_list")
 local Providers = require("codegpt.providers")
 local Api = require("codegpt.api")
+local Utils = require("codegpt.utils")
 
 local Commands = {}
 

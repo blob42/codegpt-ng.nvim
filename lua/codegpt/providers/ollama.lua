@@ -122,7 +122,7 @@ function OllaMaProvider.make_call(payload, cb)
 			curl_callback(response, cb)
 		end,
 		on_error = function(err)
-			print("Curl error:", err.message)
+			vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
 			Api.run_finished_hook()
 		end,
 	})
