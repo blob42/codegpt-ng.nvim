@@ -1,4 +1,4 @@
----@class CodegptConfig
+---@class codegpt.Config
 local M = {}
 
 -- -- Read old config if it exists
@@ -119,7 +119,7 @@ M.model_override = nil
 
 ---@alias CallbackType 'code_popup' | 'replace_lines' | 'text_popup'
 
----@class Model
+---@class codegpt.Model
 ---@field alias? string An alias for this model
 ---@field temperature? number 0 -> 1, what sampling temperature to use.
 ---@field max_tokens? number The maximum number of tokens to use including the prompt tokens.
@@ -132,11 +132,11 @@ M.model_override = nil
 ---@field params? table Custom parameters to include with this model query
 local Model = {}
 
----@alias ModelDef { [string] : Model }
+---@alias ModelDef { [string] : codegpt.Model }
 
 ---@alias Hook fun()
 
----@class Connection
+---@class codegpt.Connection
 ---@field chat_completions_url? string OpenAI API compatible API endpoint
 ---@field openai_api_key? string https://platform.openai.com/account/api-keys
 ---@field ollama_base_url? string ollama base api url default: http://localhost:11434/api/
@@ -144,7 +144,7 @@ local Model = {}
 ---@field proxy? string [protocol://]host[:port] e.g. socks5://127.0.0.1:9999
 ---@field allow_insecure? boolean Allow insecure connections?
 
----@class UiOptions
+---@class codegpt.UIOptions
 ---@field popup_border {style:string} Border style to use for the popup
 ---@field wrap_popup_text boolean Wraps the text on the popup window, deprecated in favor of codegpt_popup_window_options
 ---@field popup_window_options {}
@@ -155,15 +155,15 @@ local Model = {}
 ---@field spinners? string[] Custom list of icons to use for the spinner animation
 ---@field spinner_speed? number Speed of spinner animation, higher is slower
 
----@class CodegptOptions
----@field connection Connection Connection parameters
----@field ui UiOptions display parameters
+---@class codegpt.Options
+---@field connection codegpt.Connection Connection parameters
+---@field ui codegpt.UIOptions display parameters
 ---@field models? table<provider, ModelDef> Model configs grouped by provider
 ---@field write_response_to_err_log? boolean Log model answers to error buffer
 ---@field clear_visual_selection? boolean Clears visual selection after completion
 ---@field hooks? { request_started?:Hook,  request_finished?:Hook}
 
----@type CodegptOptions
+---@type codegpt.Options
 local defaults = {
 	connection = {
 		api_provider = "openai",
@@ -194,11 +194,11 @@ local defaults = {
 	},
 }
 
----@type CodegptOptions
+---@type codegpt.Options
 ---@diagnostic disable-next-line
 M.opts = {}
 
----@param options? CodegptOptions
+---@param options? codegpt.Options
 M.setup = function(options)
 	M.opts = vim.tbl_deep_extend("force", {}, defaults, options or {})
 

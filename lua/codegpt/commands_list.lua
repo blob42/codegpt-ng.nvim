@@ -2,7 +2,7 @@ local Utils = require("codegpt.utils")
 local Ui = require("codegpt.ui")
 local Config = require("codegpt.config")
 
-local CommandsList = {}
+local M = {}
 local cmd_default = {
 	model = "gpt-3.5-turbo",
 	max_tokens = 4096,
@@ -19,7 +19,7 @@ local cmd_default = {
 	max_output_tokens = nil,
 }
 
-CommandsList.CallbackTypes = {
+M.CallbackTypes = {
 	["text_popup"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
 		local popup_filetype = Config.opts.ui.text_popup_filetype
 		Ui.popup(lines, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
@@ -43,7 +43,7 @@ CommandsList.CallbackTypes = {
 	["custom"] = nil,
 }
 
-function CommandsList.get_cmd_opts(cmd)
+function M.get_cmd_opts(cmd)
 	local opts = vim.g["codegpt_commands_defaults"][cmd]
 	local user_set_opts = {}
 
@@ -75,10 +75,10 @@ function CommandsList.get_cmd_opts(cmd)
 	if opts.callback_type == "custom" then
 		opts.callback = user_set_opts.callback
 	else
-		opts.callback = CommandsList.CallbackTypes[opts.callback_type]
+		opts.callback = M.CallbackTypes[opts.callback_type]
 	end
 
 	return opts
 end
 
-return CommandsList
+return M
