@@ -2,6 +2,7 @@ local Popup = require("nui.popup")
 local Split = require("nui.split")
 local Config = require("codegpt.config")
 local event = require("nui.utils.autocmd").event
+local config = require("codegpt.config")
 
 local M = {}
 
@@ -93,7 +94,7 @@ local function create_popup()
 		popup = Popup(popupOpts)
 	end
 
-	popup:update_layout(vim.g["codegpt_popup_options"])
+	popup:update_layout(config.opts.ui.popup_options)
 
 	return popup
 end
