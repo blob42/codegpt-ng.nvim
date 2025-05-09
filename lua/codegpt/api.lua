@@ -30,6 +30,7 @@ function Api.get_status(...)
 		end
 		return spinners[frame + 1]
 	else
+		assert(timer ~= nil)
 		if timer:is_active() then
 			timer:stop()
 		end
