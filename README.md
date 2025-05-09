@@ -37,7 +37,7 @@ Installing with packer.
 
 ```lua
 use({
-   "blob42/CodeGPT.nvim",
+   "blob42/codegpt-ng.nvim",
    requires = {
       "MunifTanjim/nui.nvim",
       "nvim-lua/plenary.nvim",
@@ -53,14 +53,14 @@ Installing with plugged.
 ```vim
 Plug("nvim-lua/plenary.nvim")
 Plug("MunifTanjim/nui.nvim")
-Plug("blob42/CodeGPT.nvim")
+Plug("blob42/codegpt-ng.nvim")
 ```
 
 ## Commands
 
-The top-level command is `:chat`. The behavior is different depending on whether text is selected and/or arguments are passed.
+The top-level command is `:Chat`. The behavior is different depending on whether text is selected and/or arguments are passed.
 
-You can also use `:vchat` to temporary enforce the vertical layout.
+You can also use `:VChat` to temporary enforce the vertical layout.
 
 ### Completion
 * `:Chat` with text selection will trigger the `completion` command, ChatGPT will try to complete the selected code snippet.
