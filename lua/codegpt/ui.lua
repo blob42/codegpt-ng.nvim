@@ -75,11 +75,6 @@ local function create_popup()
 			window_options = {}
 		end
 
-		-- check the old wrap config variable and use it if it's not set
-		if window_options["wrap"] == nil then
-			window_options["wrap"] = Config.opts.ui.wrap_popup_text
-		end
-
 		local popupOpts = {
 			enter = true,
 			focusable = true,

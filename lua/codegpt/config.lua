@@ -147,7 +147,6 @@ local Model = {}
 
 ---@class codegpt.UIOptions
 ---@field popup_border {style:string} Border style to use for the popup
----@field wrap_popup_text boolean Wraps the text on the popup window, deprecated in favor of codegpt_popup_window_options
 ---@field popup_window_options {}
 ---@field text_popup_filetype string set the filetype of the text popup
 ---@field popup_type "popup" | "vertical" | "horizontal" Set the type of ui to use for the popup
@@ -175,7 +174,6 @@ local defaults = {
 	},
 	ui = {
 		popup_border = { style = "rounded" },
-		wrap_popup_text = true,
 		popup_window_options = {},
 		text_popup_filetype = "markdown",
 		popup_type = "popup",
