@@ -149,7 +149,8 @@ local Model = {}
 ---@field popup_border {style:string} Border style to use for the popup
 ---@field popup_window_options {}
 ---@field popup_options? table nui.nvim popup options
----@field text_popup_filetype string set the filetype of the text popup
+---@field persistent? boolean Do not close popup window on mouse leave. Useful with vertical and horizontal layouts.
+---@field text_popup_filetype string Set the filetype of the text popup
 ---@field popup_type "popup" | "vertical" | "horizontal" Set the type of ui to use for the popup
 ---@field horizontal_popup_size string Set the height of the horizontal popup
 ---@field vertical_popup_size string Set the width of the vertical popup

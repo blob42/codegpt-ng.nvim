@@ -13,10 +13,12 @@ local function setup_ui_element(lines, filetype, bufnr, start_row, start_col, en
 	-- mount/open the component
 	ui_elem:mount()
 
-	-- unmount component when cursor leaves buffer
-	ui_elem:on(event.BufLeave, function()
-		ui_elem:unmount()
-	end)
+	if not config.opts.ui.persistent then
+		-- unmount component when cursor leaves buffer
+		ui_elem:on(event.BufLeave, function()
+			ui_elem:unmount()
+		end)
+	end
 
 	-- unmount component when key 'q'
 	ui_elem:map("n", vim.g["codegpt_ui_commands"].quit, function()
