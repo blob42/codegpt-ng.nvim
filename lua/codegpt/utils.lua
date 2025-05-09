@@ -1,6 +1,12 @@
 local config = require("codegpt.config")
 local Utils = {}
 
+---@param mode string
+---@return boolean
+local function is_visual_mode(mode)
+	return mode == "v" or mode == "V" or mode == "^V"
+end
+
 function Utils.get_filetype()
 	local bufnr = vim.api.nvim_get_current_buf()
 	return vim.api.nvim_get_option_value("filetype", { buf = bufnr })
@@ -9,8 +15,19 @@ end
 function Utils.get_visual_selection()
 	local bufnr = vim.api.nvim_get_current_buf()
 
-	local start_pos = vim.api.nvim_buf_get_mark(bufnr, "<")
-	local end_pos = vim.api.nvim_buf_get_mark(bufnr, ">")
+	local mode = vim.fn.mode()
+	local is_visual = is_visual_mode(mode)
+
+	local start_pos, end_pos
+	if is_visual then
+		-- If we're in visual mode, use 'v' and '.'
+		start_pos = vim.api.nvim_buf_get_mark(bufnr, "v")
+		end_pos = vim.api.nvim_buf_get_mark(bufnr, ".")
+	else
+		-- Fallback to marks if not in visual mode
+		start_pos = vim.api.nvim_buf_get_mark(bufnr, "<")
+		end_pos = vim.api.nvim_buf_get_mark(bufnr, ">")
+	end
 
 	if start_pos[1] == end_pos[1] and start_pos[2] == end_pos[2] then
 		return 0, 0, 0, 0
@@ -35,9 +52,15 @@ function Utils.get_visual_selection()
 	return start_row, start_col, end_row, end_col
 end
 
-function Utils.get_selected_lines()
+function Utils.get_selected_lines(opts)
 	local bufnr = vim.api.nvim_get_current_buf()
-	local start_row, start_col, end_row, end_col = Utils.get_visual_selection()
+	local start_row, start_col, end_row, end_col
+	if (opts.line2 - opts.line1 + 1) == #vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) then
+		start_row, start_col, end_row, end_col = 0, 0, -1, -1
+	else
+		start_row, start_col, end_row, end_col = Utils.get_visual_selection()
+	end
+
 	local lines = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
 	return table.concat(lines, "\n")
 end
