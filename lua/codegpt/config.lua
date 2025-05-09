@@ -143,14 +143,16 @@ local Model = {}
 ---@field popup_type "popup" | "vertical" | "horizontal" Set the type of ui to use for the popup
 ---@field horizontal_popup_size string Set the height of the horizontal popup
 ---@field vertical_popup_size string Set the width of the vertical popup
+---@field spinners? string[] Custom list of icons to use for the spinner animation
+---@field spinner_speed? number Speed of spinner animation, higher is slower
 
 ---@class CodegptOptions
 ---@field connection Connection Connection parameters
 ---@field ui UiOptions display parameters
 ---@field models? table<provider, ModelDef> Model configs grouped by provider
 ---@field write_response_to_err_log? boolean Log model answers to error buffer
----@field clear_visual_selection boolean Clears visual selection after completion
----@field hooks { request_started?:Hook,  request_finished?:Hook}
+---@field clear_visual_selection? boolean Clears visual selection after completion
+---@field hooks? { request_started?:Hook,  request_finished?:Hook}
 
 ---FIXME: merge with class above
 ---@type CodegptOptions
@@ -167,6 +169,9 @@ local defaults = {
 		popup_type = "popup",
 		horizontal_popup_size = "20%",
 		vertical_popup_size = "20%",
+		-- spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
+		spinners = { "", "", "", "", "", "" },
+		spinner_speed = 80, -- higher is slower
 	},
 	api_provider = "openai",
 	models = {
