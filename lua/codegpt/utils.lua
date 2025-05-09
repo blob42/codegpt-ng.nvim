@@ -1,5 +1,5 @@
 local config = require("codegpt.config")
-Utils = {}
+local Utils = {}
 
 function Utils.get_filetype()
 	local bufnr = vim.api.nvim_get_current_buf()

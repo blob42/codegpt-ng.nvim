@@ -104,7 +104,12 @@ vim.g["codegpt_ui_commands"] = {
 }
 vim.g["codegpt_ui_custom_commands"] = {}
 
----@alias provider 'ollama' | 'openai'
+---@alias provider
+---|'ollama'
+---|'openai'
+---|'azure'
+---|'anthropic'
+---|'groc'
 
 ---@alias CallbackType 'code_popup' | 'replace_lines' | 'text_popup'
 
@@ -121,7 +126,7 @@ vim.g["codegpt_ui_custom_commands"] = {}
 ---@field params? table Custom parameters to include with this model query
 local Model = {}
 
----@alias ModelDef { [string] : Model}
+---@alias ModelDef { [string] : Model }
 
 ---@alias Hook fun()
 
@@ -129,7 +134,6 @@ local Model = {}
 ---@field chat_completions_url? string OpenAI API compatible API endpoint
 ---@field openai_api_key? string https://platform.openai.com/account/api-keys
 ---@field api_provider? string Type of provider for the OpenAI API endpoint
----@field proxy? string Proxy to use when making API requests
 
 ---@class UiOptions
 ---@field popup_border {style:string} Border style to use for the popup
@@ -188,7 +192,7 @@ M.setup = function(options)
 		M.opts.connection.openai_api_key = os.getenv("OPENAI_API_KEY")
 	end
 
-	print(vim.inspect(M.opts))
+	-- print(vim.inspect(M.opts))
 end
 
 return M
