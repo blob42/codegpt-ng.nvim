@@ -52,6 +52,11 @@ function Utils.get_visual_selection()
 	return start_row, start_col, end_row, end_col
 end
 
+---@alias bounding_box [number,number,number,number]
+
+---@param opts table options passed by nvim_create_user_command to the callback
+---@return string text selected text string
+---@return bounding_box bounds text bounding box
 function Utils.get_selected_lines(opts)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local start_row, start_col, end_row, end_col
@@ -62,7 +67,7 @@ function Utils.get_selected_lines(opts)
 	end
 
 	local lines = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
-	return table.concat(lines, "\n")
+	return table.concat(lines, "\n"), { start_row, start_col, end_row, end_col }
 end
 
 function Utils.insert_lines(lines)
