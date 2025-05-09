@@ -1,4 +1,4 @@
-local config = require("codegpt.config")
+local Config = require("codegpt.config")
 local M = {}
 
 local Commands = require("codegpt.commands")
@@ -50,6 +50,36 @@ function M.run_cmd(opts)
 	Commands.run_cmd(command, command_args, text_selection)
 end
 
-M.setup = config.setup
+--- List available models
+function M.list_models()
+	local models = Providers.get_provider().get_models()
+	vim.ui.select(models, {
+		prompt = "ollama: available models",
+		format_item = function(item)
+			return item.name
+		end,
+	}, function(choice)
+		if choice.name ~= nil and #choice.name > 0 then
+			print(choice.name)
+		end
+	end)
+end
+
+function M.select_model()
+	local models = Providers.get_provider().get_models()
+	vim.ui.select(models, {
+		prompt = "ollama: available models",
+		format_item = function(item)
+			return item.name
+		end,
+	}, function(choice)
+		if choice ~= nil and #choice.name > 0 then
+			Config.model_override = choice.name
+			print("model override = <" .. choice.name .. ">")
+		end
+	end)
+end
+
+M.setup = Config.setup
 
 return M

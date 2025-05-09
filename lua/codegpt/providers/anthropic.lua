@@ -4,7 +4,7 @@ local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
 
-AnthropicProvider = {}
+local M = {}
 
 local function generate_messages(command, cmd_opts, command_args, text_selection)
 	local user_message = Render.render(command, cmd_opts.user_message_template, command_args, text_selection, cmd_opts)
@@ -17,7 +17,7 @@ local function generate_messages(command, cmd_opts, command_args, text_selection
 	return messages
 end
 
-function AnthropicProvider.make_request(command, cmd_opts, command_args, text_selection)
+function M.make_request(command, cmd_opts, command_args, text_selection)
 	local system_message =
 		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
@@ -37,7 +37,7 @@ function AnthropicProvider.make_request(command, cmd_opts, command_args, text_se
 	return request
 end
 
-function AnthropicProvider.make_headers()
+function M.make_headers()
 	local api_key = vim.g["codegpt_anthropic_api_key"] or os.getenv("ANTHROPIC_API_KEY")
 
 	if not api_key then
@@ -69,13 +69,13 @@ local function curl_callback(response, cb)
 
 	vim.schedule_wrap(function(msg)
 		local json = vim.fn.json_decode(msg)
-		AnthropicProvider.handle_response(json, cb)
+		M.handle_response(json, cb)
 	end)(body)
 
 	Api.run_finished_hook()
 end
 
-function AnthropicProvider.handle_response(json, cb)
+function M.handle_response(json, cb)
 	if json == nil then
 		print("Response empty")
 	elseif json.error then
@@ -106,10 +106,10 @@ function AnthropicProvider.handle_response(json, cb)
 	end
 end
 
-function AnthropicProvider.make_call(payload, cb)
+function M.make_call(payload, cb)
 	local payload_str = vim.fn.json_encode(payload)
 	local url = "https://api.anthropic.com/v1/messages"
-	local headers = AnthropicProvider.make_headers()
+	local headers = M.make_headers()
 	Api.run_started_hook()
 	curl.post(url, {
 		body = payload_str,
@@ -118,10 +118,16 @@ function AnthropicProvider.make_call(payload, cb)
 			curl_callback(response, cb)
 		end,
 		on_error = function(err)
-			vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
+			vim.defer_fn(function()
+				vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
+			end, 0)
 			Api.run_finished_hook()
 		end,
 	})
 end
 
-return AnthropicProvider
+function M.get_models()
+	vim.notify("not implemented", vim.log.levels.WARN)
+end
+
+return M

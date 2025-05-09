@@ -39,7 +39,6 @@ function Api.get_status(...)
 end
 
 function Api.run_started_hook()
-	print("started hook !")
 	if Config.opts.hooks.request_started ~= nil then
 		Config.opts.hooks.request_started()
 	end
@@ -48,7 +47,6 @@ function Api.run_started_hook()
 end
 
 function Api.run_finished_hook()
-	print("finished")
 	CODEGPT_CALLBACK_COUNTER = CODEGPT_CALLBACK_COUNTER - 1
 	if CODEGPT_CALLBACK_COUNTER <= 0 then
 		if Config.opts.hooks.request_finished ~= nil then

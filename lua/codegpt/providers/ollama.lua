@@ -5,7 +5,9 @@ local Api = require("codegpt.api")
 local Config = require("codegpt.config")
 local Tokens = require("codegpt.tokens")
 
-OllaMaProvider = {}
+local M = {}
+
+local selected_model = nil
 
 local function generate_messages(command, cmd_opts, command_args, text_selection)
 	local system_message =
@@ -34,7 +36,7 @@ local function get_max_tokens(max_tokens, prompt)
 	return max_tokens - total_length
 end
 
-function OllaMaProvider.make_request(command, cmd_opts, command_args, text_selection)
+function M.make_request(command, cmd_opts, command_args, text_selection)
 	-- NOTE Do not use the system message for now
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
 
@@ -48,7 +50,7 @@ function OllaMaProvider.make_request(command, cmd_opts, command_args, text_selec
 			num_ctx = max_tokens,
 		},
 		-- max_tokens = max_tokens,
-		model = cmd_opts.model,
+		model = Config.model_override or cmd_opts.model,
 		messages = messages,
 		stream = false,
 	}
@@ -56,11 +58,11 @@ function OllaMaProvider.make_request(command, cmd_opts, command_args, text_selec
 	return request
 end
 
-function OllaMaProvider.make_headers()
+function M.make_headers()
 	return { ["Content-Type"] = "application/json" }
 end
 
-function OllaMaProvider.handle_response(json, cb)
+function M.handle_response(json, cb)
 	if json == nil then
 		print("Response empty")
 	elseif json.done == nil or json.done == false then
@@ -103,18 +105,18 @@ local function curl_callback(response, cb)
 
 	vim.schedule_wrap(function(msg)
 		local json = vim.fn.json_decode(msg)
-		OllaMaProvider.handle_response(json, cb)
+		M.handle_response(json, cb)
 	end)(body)
 
 	Api.run_finished_hook()
 end
 
-function OllaMaProvider.make_call(payload, cb)
+function M.make_call(payload, cb)
 	local payload_str = vim.fn.json_encode(payload)
-	local default_url = "http://localhost:11434/api/chat"
-	local url = Config.opts.connection.chat_completions_url or default_url
-	local headers = OllaMaProvider.make_headers()
+	local url = Config.opts.connection.ollama_base_url:gsub("/$", "") .. "/api/chat"
+	local headers = M.make_headers()
 	Api.run_started_hook()
+	print(url)
 	curl.post(url, {
 		body = payload_str,
 		headers = headers,
@@ -122,10 +124,45 @@ function OllaMaProvider.make_call(payload, cb)
 			curl_callback(response, cb)
 		end,
 		on_error = function(err)
-			vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
+			vim.defer_fn(function()
+				vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
+			end, 0)
 			Api.run_finished_hook()
 		end,
+		insecure = Config.opts.connection.allow_insecure,
+		proxy = Config.opts.connection.proxy,
 	})
 end
 
-return OllaMaProvider
+---@return table models list of ollama defined models
+function M.get_models()
+	local headers = M.make_headers()
+	local url = Config.opts.connection.ollama_base_url .. "/api/tags"
+	local ok, response = pcall(function()
+		return curl.get(url, {
+			sync = true,
+			headers = headers,
+			insecure = Config.opts.connection.allow_insecure,
+			proxy = Config.opts.connection.proxy,
+		})
+	end)
+	if not ok then
+		error("Could not get the Ollama models from " .. url .. "/api/tags.\nError: " .. response)
+		return {}
+	end
+	local ok, json = pcall(vim.json.decode, response.body)
+	if not ok then
+		error("Could not parse the response from " .. url .. "/v1/models")
+		return {}
+	end
+	-- print(vim.inspect(json))
+	local models = {}
+	for _, model in ipairs(json.models) do
+		table.insert(models, 0, model)
+	end
+	return models
+end
+
+-- function M.choose_model
+
+return M
