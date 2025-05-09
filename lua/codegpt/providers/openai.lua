@@ -4,7 +4,7 @@ local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
 
-OpenAIProvider = {}
+local M = {}
 
 local function generate_messages(command, cmd_opts, command_args, text_selection)
 	local system_message =
@@ -40,7 +40,7 @@ local function get_max_tokens(max_tokens, messages)
 	return max_tokens - total_length
 end
 
-function OpenAIProvider.make_request(command, cmd_opts, command_args, text_selection)
+function M.make_request(command, cmd_opts, command_args, text_selection)
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
 
 	local max_tokens = cmd_opts.max_tokens
@@ -79,13 +79,13 @@ local function curl_callback(response, cb)
 
 	vim.schedule_wrap(function(msg)
 		local json = vim.fn.json_decode(msg)
-		OpenAIProvider.handle_response(json, cb)
+		M.handle_response(json, cb)
 	end)(body)
 
 	Api.run_finished_hook()
 end
 
-function OpenAIProvider.make_headers()
+function M.make_headers()
 	local token = vim.g["codegpt_openai_api_key"]
 	if not token then
 		error(
@@ -96,7 +96,7 @@ function OpenAIProvider.make_headers()
 	return { Content_Type = "application/json", Authorization = "Bearer " .. token }
 end
 
-function OpenAIProvider.handle_response(json, cb)
+function M.handle_response(json, cb)
 	if json == nil then
 		print("Response empty")
 	elseif json.error then
@@ -123,10 +123,10 @@ function OpenAIProvider.handle_response(json, cb)
 	end
 end
 
-function OpenAIProvider.make_call(payload, cb)
+function M.make_call(payload, cb)
 	local payload_str = vim.fn.json_encode(payload)
 	local url = Config.opts.connection.chat_completions_url
-	local headers = OpenAIProvider.make_headers()
+	local headers = M.make_headers()
 	Api.run_started_hook()
 	curl.post(url, {
 		body = payload_str,
@@ -135,10 +135,16 @@ function OpenAIProvider.make_call(payload, cb)
 			curl_callback(response, cb)
 		end,
 		on_error = function(err)
-			vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
+			vim.defer_fn(function()
+				vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
+			end, 0)
 			Api.run_finished_hook()
 		end,
 	})
 end
 
-return OpenAIProvider
+function M.get_models()
+	vim.notify("not implemented", vim.log.levels.WARN)
+end
+
+return M

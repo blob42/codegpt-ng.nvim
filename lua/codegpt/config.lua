@@ -104,6 +104,12 @@ vim.g["codegpt_ui_commands"] = {
 }
 vim.g["codegpt_ui_custom_commands"] = {}
 
+---
+--- Refactor to idiomatic neovim plugin
+---
+
+M.model_override = nil
+
 ---@alias provider
 ---|'ollama'
 ---|'openai'
@@ -133,7 +139,10 @@ local Model = {}
 ---@class Connection
 ---@field chat_completions_url? string OpenAI API compatible API endpoint
 ---@field openai_api_key? string https://platform.openai.com/account/api-keys
+---@field ollama_base_url? string ollama base api url default: http://localhost:11434/api/
 ---@field api_provider? string Type of provider for the OpenAI API endpoint
+---@field proxy? string [protocol://]host[:port] e.g. socks5://127.0.0.1:9999
+---@field allow_insecure? boolean Allow insecure connections?
 
 ---@class UiOptions
 ---@field popup_border {style:string} Border style to use for the popup
@@ -154,12 +163,14 @@ local Model = {}
 ---@field clear_visual_selection? boolean Clears visual selection after completion
 ---@field hooks? { request_started?:Hook,  request_finished?:Hook}
 
----FIXME: merge with class above
 ---@type CodegptOptions
 local defaults = {
 	connection = {
 		api_provider = "openai",
 		chat_completions_url = "https://api.openai.com/v1/chat/completions",
+		ollama_base_url = "http://localhost:11434",
+		proxy = nil,
+		allow_insecure = false,
 	},
 	ui = {
 		popup_border = { style = "rounded" },
@@ -173,7 +184,6 @@ local defaults = {
 		spinners = { "", "", "", "", "", "" },
 		spinner_speed = 80, -- higher is slower
 	},
-	api_provider = "openai",
 	models = {
 		ollama = { ["test"] = { language_instructions = "test" } },
 	},
