@@ -22,6 +22,13 @@ function M.run_cmd(opts)
 		Config.popup_override = nil
 	end
 
+	-- handle bang
+	if opts.bang then
+		Config.persistent_override = true
+	else
+		Config.persistent_override = false
+	end
+
 	local text_selection, bounds = Utils.get_selected_lines(opts)
 	local command_args = table.concat(opts.fargs, " ")
 
