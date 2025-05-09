@@ -8,6 +8,7 @@ local status_index = 0
 local timer = vim.uv.new_timer()
 
 local function start_spinner_timer()
+	assert(timer ~= nil)
 	timer:start(
 		0,
 		100,

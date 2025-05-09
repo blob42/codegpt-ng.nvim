@@ -104,7 +104,7 @@ local function create_popup()
 end
 
 function M.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col)
-	local popup_type = Config.opts.ui.popup_type
+	local popup_type = Config.popup_override or Config.opts.ui.popup_type
 	local ui_elem = nil
 	if popup_type == "horizontal" then
 		ui_elem = create_horizontal()
