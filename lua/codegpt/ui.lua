@@ -13,7 +13,7 @@ local function setup_ui_element(lines, filetype, bufnr, start_row, start_col, en
 	-- mount/open the component
 	ui_elem:mount()
 
-	if not config.opts.ui.persistent then
+	if not (config.persistent_override or config.opts.ui.persistent) then
 		-- unmount component when cursor leaves buffer
 		ui_elem:on(event.BufLeave, function()
 			ui_elem:unmount()

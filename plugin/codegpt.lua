@@ -6,6 +6,7 @@ vim.api.nvim_create_user_command("Chat", function(opts)
 	return CodeGptModule.run_cmd(opts)
 end, {
 	range = true,
+	bang = true,
 	nargs = "*",
 	complete = function()
 		local cmd = {}
@@ -23,6 +24,7 @@ vim.api.nvim_create_user_command("VChat", function(opts)
 	return CodeGptModule.run_cmd(opts)
 end, {
 	desc = "Use vertical popup in popup callbacks",
+	bang = true,
 	range = true,
 	nargs = "*",
 	complete = function()
