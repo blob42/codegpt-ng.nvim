@@ -43,6 +43,7 @@ M.CallbackTypes = {
 	["custom"] = nil,
 }
 
+--- Combine the final command arguments before the api call
 function M.get_cmd_opts(cmd)
 	local opts = vim.g["codegpt_commands_defaults"][cmd]
 	local user_set_opts = {}

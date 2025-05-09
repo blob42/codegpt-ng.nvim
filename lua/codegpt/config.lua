@@ -109,6 +109,7 @@ vim.g["codegpt_ui_custom_commands"] = {}
 ---
 
 M.model_override = nil
+M.popup_override = nil
 
 ---@alias provider
 ---|'ollama'

@@ -16,6 +16,12 @@ function M.get_status(...)
 end
 
 function M.run_cmd(opts)
+	if opts.name and opts.name:match("^V") then
+		Config.popup_override = "vertical"
+	else
+		Config.popup_override = nil
+	end
+
 	local text_selection, bounds = Utils.get_selected_lines(opts)
 	local command_args = table.concat(opts.fargs, " ")
 
