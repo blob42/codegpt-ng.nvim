@@ -148,6 +148,7 @@ local Model = {}
 ---@class codegpt.UIOptions
 ---@field popup_border {style:string} Border style to use for the popup
 ---@field popup_window_options {}
+---@field popup_options? table nui.nvim popup options
 ---@field text_popup_filetype string set the filetype of the text popup
 ---@field popup_type "popup" | "vertical" | "horizontal" Set the type of ui to use for the popup
 ---@field horizontal_popup_size string Set the height of the horizontal popup
@@ -174,6 +175,7 @@ local defaults = {
 	},
 	ui = {
 		popup_border = { style = "rounded" },
+		popup_options = nil,
 		popup_window_options = {},
 		text_popup_filetype = "markdown",
 		popup_type = "popup",

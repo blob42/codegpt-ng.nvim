@@ -253,7 +253,9 @@ require('lualine').setup({
 
 #### Popup commands
 
-The default filetype of the text popup window is markdown. You can change this by setting the `codegpt_popup_options` variable.
+You can change the default popup window options with g["codegpt_popup_options"]
+
+The default filetype of the text popup window is markdown. You can change this by setting the `codegpt_text_popup_filetype` variable.
 
 ```lua
 vim.g["codegpt_text_popup_filetype"] = "markdown"
