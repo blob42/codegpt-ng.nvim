@@ -3,7 +3,7 @@ local Split = require("nui.split")
 local Config = require("codegpt.config")
 local event = require("nui.utils.autocmd").event
 
-local Ui = {}
+local M = {}
 
 local popup
 local split
@@ -23,7 +23,7 @@ local function setup_ui_element(lines, filetype, bufnr, start_row, start_col, en
 	end, { noremap = true, silent = true })
 
 	-- set content
-	vim.api.nvim_buf_set_option(ui_elem.bufnr, "filetype", filetype)
+	vim.api.nvim_set_option_value("filetype", filetype, { buf = ui_elem.bufnr })
 	vim.api.nvim_buf_set_lines(ui_elem.bufnr, 0, 1, false, lines)
 
 	-- replace lines when ctrl-o pressed
@@ -103,7 +103,7 @@ local function create_popup()
 	return popup
 end
 
-function Ui.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col)
+function M.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col)
 	local popup_type = Config.opts.ui.popup_type
 	local ui_elem = nil
 	if popup_type == "horizontal" then
@@ -116,4 +116,4 @@ function Ui.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col
 	setup_ui_element(lines, filetype, bufnr, start_row, start_col, end_row, end_col, ui_elem)
 end
 
-return Ui
+return M
