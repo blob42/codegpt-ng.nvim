@@ -1,27 +1,35 @@
-# CodeGPT.nvim
+# codegpt-ng.nvim
 
-CodeGPT is a plugin for neovim that provides commands to interact with ChatGPT. The focus is around code related usages. So code completion, refactorings, generating docs, etc.
+**codegpt-ng** is a minimalist plugin for neovim that provides commands to interact with AI backend. The focus is around code related usages. So code completion, refactorings, generating docs, etc.
 
-This is a fork of the original repository of @dpayne which disappeared.
+This is a fork of the original **CodeGPT** repository from github user @dpayne.
+All credit goes to him for the initial work.
+
+This fork does the following:
+
+- Full support for **Ollama* own API on top of previously implemented OpenAI api. 
+- Removed dependency on OpenAI's tokenizer.
+- Refactored the plugin in a more idiomatic way for typical neovim plugins. 
+- Define all options in a single config table
+- Fixed status command to integrate with statusline plugins
+- Many other improvements to fit here, check the commit history.
 
 ## Installation
 
-* Set environment variable `OPENAI_API_KEY` to your [openai api key](https://platform.openai.com/account/api-keys).
 * The plugins 'plenary' and 'nui' are also required.
-* OpenAI's tokenizer [tiktoken](https://github.com/openai/tiktoken) is recommended for accurate token count estimate.
 
 Installing with Lazy.
 
 ```lua
 {
-    "blob42/CodeGPT.nvim",
+    "blob42/codegpt-ng.nvim",
     dependencies = {
       'nvim-lua/plenary.nvim',
       'MunifTanjim/nui.nvim',
     },
-    config = function()
-        require("codegpt.config")
-    end
+    opts = {
+      -- your custom options
+    }
 }
 ```
 
@@ -35,7 +43,7 @@ use({
       "nvim-lua/plenary.nvim",
    },
    config = function()
-      require("codegpt.config")
+      require("codegpt").setup()
    end
 })
 ```
@@ -48,14 +56,11 @@ Plug("MunifTanjim/nui.nvim")
 Plug("blob42/CodeGPT.nvim")
 ```
 
-Installing OpenAI's tokenizer
-```sh
-pip install tiktoken
-```
-
 ## Commands
 
-The top-level command is `:Chat`. The behavior is different depending on whether text is selected and/or arguments are passed.
+The top-level command is `:chat`. The behavior is different depending on whether text is selected and/or arguments are passed.
+
+You can also use `:vchat` to temporary enforce the vertical layout.
 
 ### Completion
 * `:Chat` with text selection will trigger the `completion` command, ChatGPT will try to complete the selected code snippet.
