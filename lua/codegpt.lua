@@ -16,7 +16,7 @@ function M.get_status(...)
 end
 
 function M.run_cmd(opts)
-	local text_selection = Utils.get_selected_lines()
+	local text_selection = Utils.get_selected_lines(opts)
 	local command_args = table.concat(opts.fargs, " ")
 
 	local command = opts.fargs[1]
