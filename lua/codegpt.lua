@@ -16,7 +16,7 @@ function M.get_status(...)
 end
 
 function M.run_cmd(opts)
-	local text_selection = Utils.get_selected_lines(opts)
+	local text_selection, bounds = Utils.get_selected_lines(opts)
 	local command_args = table.concat(opts.fargs, " ")
 
 	local command = opts.fargs[1]
@@ -47,7 +47,7 @@ function M.run_cmd(opts)
 		return
 	end
 
-	Commands.run_cmd(command, command_args, text_selection)
+	Commands.run_cmd(command, command_args, text_selection, bounds)
 end
 
 --- List available models
