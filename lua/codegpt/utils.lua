@@ -60,7 +60,7 @@ end
 function Utils.get_selected_lines(opts)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local start_row, start_col, end_row, end_col
-	if (opts.line2 - opts.line1 + 1) == #vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) then
+	if (opts.line2 - opts.line1 + 1) == vim.api.nvim_buf_line_count(bufnr) then
 		start_row, start_col, end_row, end_col = 0, 0, -1, -1
 	else
 		start_row, start_col, end_row, end_col = Utils.get_visual_selection()
