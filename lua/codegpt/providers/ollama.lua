@@ -116,7 +116,6 @@ function M.make_call(payload, cb)
 	local url = Config.opts.connection.ollama_base_url:gsub("/$", "") .. "/api/chat"
 	local headers = M.make_headers()
 	Api.run_started_hook()
-	print(url)
 	curl.post(url, {
 		body = payload_str,
 		headers = headers,
