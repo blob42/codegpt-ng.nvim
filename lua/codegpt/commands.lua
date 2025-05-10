@@ -2,6 +2,7 @@ local CommandsList = require("codegpt.commands_list")
 local Providers = require("codegpt.providers")
 local Api = require("codegpt.api")
 local Utils = require("codegpt.utils")
+local config = require("codegpt.config")
 
 local Commands = {}
 
@@ -19,12 +20,24 @@ function Commands.run_cmd(command, command_args, text_selection, bounds)
 	end
 
 	local bufnr = vim.api.nvim_get_current_buf()
-	local new_callback = function(lines)
-		cmd_opts.callback(lines, bufnr, unpack(bounds))
+	local new_callback = nil
+
+	if config.opts.ui.stream_output then
+		new_callback = function(stream)
+			cmd_opts.callback(stream, bufnr, unpack(bounds))
+		end
+	else
+		new_callback = function(lines) -- called from Provider.handle_response
+			cmd_opts.callback(lines, bufnr, unpack(bounds))
+		end
 	end
 
 	local request = Providers.get_provider().make_request(command, cmd_opts, command_args, text_selection)
-	Providers.get_provider().make_call(request, new_callback)
+	if config.opts.ui.stream_output then
+		Providers.get_provider().make_stream_call(request, new_callback)
+	else
+		Providers.get_provider().make_call(request, new_callback)
+	end
 end
 
 function Commands.get_status(...)

@@ -158,6 +158,7 @@ local Model = {}
 ---@field vertical_popup_size string Set the width of the vertical popup
 ---@field spinners? string[] Custom list of icons to use for the spinner animation
 ---@field spinner_speed? number Speed of spinner animation, higher is slower
+---@field stream_output boolean Use streaming mode
 
 ---@class codegpt.Options
 ---@field connection codegpt.Connection Connection parameters
@@ -177,6 +178,7 @@ local defaults = {
 		allow_insecure = false,
 	},
 	ui = {
+		stream_output = false,
 		popup_border = { style = "rounded" },
 		popup_options = nil,
 		popup_window_options = {},
