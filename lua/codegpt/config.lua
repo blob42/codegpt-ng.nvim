@@ -34,7 +34,16 @@ local M = {}
 -- Set the width of the vertical popup
 -- vim.g["codegpt_vertical_popup_size"] = "20%"
 
-vim.g["codegpt_commands_defaults"] = {
+---@class codegpt.Command
+---@field user_message_template? string
+---@field language_instructions? table<string, string> language instruction in the form lang = instruction
+---@field allow_empty_text_selection? boolean allows running the command without text selection
+---@field callback_type "text_popup"
+---| "test_popup_stream"
+---| "code_popup"
+---| "replace_lines"
+
+local default_commands = {
 	["completion"] = {
 		user_message_template = "I have the following {{language}} code snippet: ```{{filetype}}\n{{text_selection}}```\nComplete the rest. Use best practices and write really good documentation. {{language_instructions}} Only return the code snippet and nothing else.",
 		language_instructions = {
@@ -167,6 +176,7 @@ local Model = {}
 ---@field write_response_to_err_log? boolean Log model answers to error buffer
 ---@field clear_visual_selection? boolean Clears visual selection after completion
 ---@field hooks? { request_started?:Hook,  request_finished?:Hook}
+---@field commands table<string, codegpt.Command> available codegpt commands
 
 ---@type codegpt.Options
 local defaults = {
@@ -203,6 +213,7 @@ local defaults = {
 		request_started = nil,
 		request_finished = nil,
 	},
+	commands = default_commands,
 }
 
 ---@type codegpt.Options
