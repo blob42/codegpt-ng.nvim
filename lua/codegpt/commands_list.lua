@@ -19,7 +19,13 @@ local cmd_default = {
 	max_output_tokens = nil,
 }
 
+local text_popup_stream = function(stream, bufnr, start_row, start_col, end_row, end_col)
+	local popup_filetype = Config.opts.ui.text_popup_filetype
+	Ui.popup_stream(stream, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
+end
+
 M.CallbackTypes = {
+	["text_popup_stream"] = text_popup_stream,
 	["text_popup"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
 		local popup_filetype = Config.opts.ui.text_popup_filetype
 		Ui.popup(lines, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
@@ -76,7 +82,11 @@ function M.get_cmd_opts(cmd)
 	if opts.callback_type == "custom" then
 		opts.callback = user_set_opts.callback
 	else
-		opts.callback = M.CallbackTypes[opts.callback_type]
+		if Config.opts.ui.stream_output then
+			opts.callback = text_popup_stream
+		else
+			opts.callback = M.CallbackTypes[opts.callback_type]
+		end
 	end
 
 	return opts

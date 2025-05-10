@@ -7,8 +7,78 @@ local M = {}
 
 local popup
 local split
+local buffer = ""
 
-local function setup_ui_element(lines, filetype, bufnr, start_row, start_col, end_row, end_col, ui_elem)
+local function create_horizontal()
+	if not split then
+		split = Split({
+			relative = "editor",
+			position = "bottom",
+			size = Config.opts.ui.horizontal_popup_size,
+		})
+	end
+
+	return split
+end
+
+local function create_vertical()
+	if not split then
+		split = Split({
+			relative = "editor",
+			position = "right",
+			size = Config.opts.ui.vertical_popup_size,
+		})
+	end
+
+	return split
+end
+
+local function create_floating()
+	if not popup then
+		local window_options = Config.opts.ui.popup_window_options
+		if window_options == nil then
+			window_options = {}
+		end
+
+		local popupOpts = {
+			enter = true,
+			focusable = true,
+			border = Config.opts.ui.popup_border,
+			position = "50%",
+			size = {
+				width = "80%",
+				height = "60%",
+			},
+		}
+
+		if not vim.tbl_isempty(window_options) then
+			popupOpts.win_options = window_options
+		end
+
+		popup = Popup(popupOpts)
+	end
+
+	popup:update_layout(Config.opts.ui.popup_options)
+
+	return popup
+end
+
+local function create_window()
+	local popup_type = Config.popup_override or Config.opts.ui.popup_type
+	local ui_elem = nil
+	if popup_type == "horizontal" then
+		ui_elem = create_horizontal()
+	elseif popup_type == "vertical" then
+		ui_elem = create_vertical()
+	else
+		ui_elem = create_floating()
+	end
+
+	return ui_elem
+end
+
+function M.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col)
+	local ui_elem = create_window()
 	-- mount/open the component
 	ui_elem:mount()
 
@@ -46,71 +116,66 @@ local function setup_ui_element(lines, filetype, bufnr, start_row, start_col, en
 	end
 end
 
-local function create_horizontal()
-	if not split then
-		split = Split({
-			relative = "editor",
-			position = "bottom",
-			size = Config.opts.ui.horizontal_popup_size,
-		})
+---@type boolean
+local stream_start = true
+local stream_ui_elem = nil
+
+--FIXME: this callback is called for each stream inputs so multiple calls are
+--done. Should be created once at reception of first stream
+function M.popup_stream(stream, filetype, bufnr, start_row, start_col, end_row, end_col)
+	if stream == nil then
+		stream_start = false
+		return
+	end
+	if stream_start then
+		stream_ui_elem = create_window()
+
+		-- mount/open the component
+		stream_ui_elem:mount()
+
+		stream_start = false
 	end
 
-	return split
-end
-
-local function create_vertical()
-	if not split then
-		split = Split({
-			relative = "editor",
-			position = "right",
-			size = Config.opts.ui.vertical_popup_size,
-		})
+	if stream_ui_elem == nil then
+		error("creating stream window")
 	end
 
-	return split
-end
+	if not (Config.persistent_override or Config.opts.ui.persistent) then
+		-- unmount component when cursor leaves buffer
+		stream_ui_elem:on(event.BufLeave, function()
+			stream_ui_elem:unmount()
+		end)
+	end
 
-local function create_popup()
-	if not popup then
-		local window_options = Config.opts.ui.popup_window_options
-		if window_options == nil then
-			window_options = {}
+	-- unmount component when key 'q'
+	stream_ui_elem:map("n", Config.opts.ui.commands.quit, function()
+		stream_ui_elem:unmount()
+	end, { noremap = true, silent = true })
+
+	vim.api.nvim_set_option_value("filetype", filetype, { buf = stream_ui_elem.bufnr })
+
+	local payload = vim.fn.json_decode(stream)
+	local content = payload.message.content
+	local lines = {}
+	local content_lines = vim.split(content, "\n")
+	if #content_lines == 1 then
+		buffer = buffer .. content_lines[1]
+	elseif #content_lines > 1 then
+		if #buffer > 0 then
+			buffer = buffer .. content_lines[1]
+			table.insert(lines, buffer)
+			buffer = ""
 		end
 
-		local popupOpts = {
-			enter = true,
-			focusable = true,
-			border = Config.opts.ui.popup_border,
-			position = "50%",
-			size = {
-				width = "80%",
-				height = "60%",
-			},
-		}
-
-		if not vim.tbl_isempty(window_options) then
-			popupOpts.win_options = window_options
+		for line in vim.iter(content_lines):skip(1) do
+			table.insert(lines, line)
 		end
-
-		popup = Popup(popupOpts)
 	end
-
-	popup:update_layout(Config.opts.ui.popup_options)
-
-	return popup
-end
-
-function M.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col)
-	local popup_type = Config.popup_override or Config.opts.ui.popup_type
-	local ui_elem = nil
-	if popup_type == "horizontal" then
-		ui_elem = create_horizontal()
-	elseif popup_type == "vertical" then
-		ui_elem = create_vertical()
-	else
-		ui_elem = create_popup()
+	if #lines > 0 then
+		vim.api.nvim_buf_set_lines(stream_ui_elem.bufnr, -2, -1, false, lines)
 	end
-	setup_ui_element(lines, filetype, bufnr, start_row, start_col, end_row, end_col, ui_elem)
+	local nlines = vim.api.nvim_buf_line_count(stream_ui_elem.bufnr)
+	vim.api.nvim_win_set_cursor(stream_ui_elem.winid, { nlines, 0 })
 end
 
 return M

@@ -52,7 +52,7 @@ function M.make_request(command, cmd_opts, command_args, text_selection)
 		-- max_tokens = max_tokens,
 		model = Config.model_override or cmd_opts.model,
 		messages = messages,
-		stream = false,
+		stream = Config.opts.ui.stream_output,
 	}
 
 	return request
@@ -89,7 +89,10 @@ function M.handle_response(json, cb)
 	end
 end
 
-local function curl_callback(response, cb)
+---@param response table plenary.curl http response
+---@param cb? fun(lines: string)
+---@param is_stream boolean
+local function curl_callback(response, cb, is_stream)
 	local status = response.status
 	local body = response.body
 	if status ~= 200 then
@@ -103,14 +106,18 @@ local function curl_callback(response, cb)
 		return
 	end
 
-	vim.schedule_wrap(function(msg)
-		local json = vim.fn.json_decode(msg)
-		M.handle_response(json, cb)
-	end)(body)
+	if not is_stream then
+		vim.schedule_wrap(function(msg)
+			local json = vim.fn.json_decode(msg)
+			M.handle_response(json, cb)
+		end)(body)
+	end
 
 	Api.run_finished_hook()
 end
 
+---@param payload table payload sent to api
+---@param cb fun(response: table) callback that receives a clenary.curl http response
 function M.make_call(payload, cb)
 	local payload_str = vim.fn.json_encode(payload)
 	local url = Config.opts.connection.ollama_base_url:gsub("/$", "") .. "/api/chat"
@@ -120,7 +127,43 @@ function M.make_call(payload, cb)
 		body = payload_str,
 		headers = headers,
 		callback = function(response)
-			curl_callback(response, cb)
+			curl_callback(response, cb, false)
+		end,
+		on_error = function(err)
+			vim.defer_fn(function()
+				vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
+			end, 0)
+			Api.run_finished_hook()
+		end,
+		insecure = Config.opts.connection.allow_insecure,
+		proxy = Config.opts.connection.proxy,
+	})
+end
+
+---@param payload table payload sent to api
+---@param stream_cb fun(data: table) callback to handle the resonse json stream
+function M.make_stream_call(payload, stream_cb)
+	local payload_str = vim.fn.json_encode(payload)
+	local url = Config.opts.connection.ollama_base_url:gsub("/$", "") .. "/api/chat"
+	local headers = M.make_headers()
+	Api.run_started_hook()
+	curl.post(url, {
+		body = payload_str,
+		headers = headers,
+		stream = function(error, data)
+			if error ~= nil then
+				vim.schedule_wrap(function(err)
+					vim.notify(err, vim.log.levels.ERROR)
+				end)(error)
+			end
+			-- stream_cb(data)
+			vim.schedule_wrap(function(msg)
+				stream_cb(msg)
+			end)(data)
+		end,
+		callback = function(response)
+			-- curl_callback(response, nil, true)
+			Api.run_finished_hook()
 		end,
 		on_error = function(err)
 			vim.defer_fn(function()
@@ -139,7 +182,6 @@ function M.get_models()
 	local url = Config.opts.connection.ollama_base_url .. "/api/tags"
 	local ok, response = pcall(function()
 		return curl.get(url, {
-			sync = true,
 			headers = headers,
 			insecure = Config.opts.connection.allow_insecure,
 			proxy = Config.opts.connection.proxy,
