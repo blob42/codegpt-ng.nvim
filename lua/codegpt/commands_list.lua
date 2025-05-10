@@ -1,6 +1,6 @@
 local Utils = require("codegpt.utils")
 local Ui = require("codegpt.ui")
-local Config = require("codegpt.config")
+local config = require("codegpt.config")
 
 local M = {}
 local cmd_default = {
@@ -20,14 +20,14 @@ local cmd_default = {
 }
 
 local text_popup_stream = function(stream, bufnr, start_row, start_col, end_row, end_col)
-	local popup_filetype = Config.opts.ui.text_popup_filetype
+	local popup_filetype = config.opts.ui.text_popup_filetype
 	Ui.popup_stream(stream, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
 end
 
 M.CallbackTypes = {
 	["text_popup_stream"] = text_popup_stream,
 	["text_popup"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
-		local popup_filetype = Config.opts.ui.text_popup_filetype
+		local popup_filetype = config.opts.ui.text_popup_filetype
 		Ui.popup(lines, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
 	end,
 	["code_popup"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
@@ -51,7 +51,7 @@ M.CallbackTypes = {
 
 --- Combine the final command arguments before the api call
 function M.get_cmd_opts(cmd)
-	local opts = vim.g["codegpt_commands_defaults"][cmd]
+	local opts = config.opts.commands[cmd]
 	local user_set_opts = {}
 
 	if vim.g["codegpt_global_commands_defaults"] ~= nil then
@@ -82,7 +82,7 @@ function M.get_cmd_opts(cmd)
 	if opts.callback_type == "custom" then
 		opts.callback = user_set_opts.callback
 	else
-		if Config.opts.ui.stream_output then
+		if config.opts.ui.stream_output then
 			opts.callback = text_popup_stream
 		else
 			opts.callback = M.CallbackTypes[opts.callback_type]

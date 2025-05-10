@@ -1,6 +1,8 @@
 -- add public vim commands
 require("codegpt.config")
+
 local CodeGptModule = require("codegpt")
+local config = require("codegpt.config")
 
 vim.api.nvim_create_user_command("Chat", function(opts)
 	return CodeGptModule.run_cmd(opts)
@@ -10,10 +12,7 @@ end, {
 	nargs = "*",
 	complete = function()
 		local cmd = {}
-		for k in pairs(vim.g["codegpt_commands_defaults"]) do
-			table.insert(cmd, k)
-		end
-		for k in pairs(vim.g["codegpt_commands"] or {}) do
+		for k in pairs(config.opts.commands) do
 			table.insert(cmd, k)
 		end
 		return cmd
@@ -29,10 +28,7 @@ end, {
 	nargs = "*",
 	complete = function()
 		local cmd = {}
-		for k in pairs(vim.g["codegpt_commands_defaults"]) do
-			table.insert(cmd, k)
-		end
-		for k in pairs(vim.g["codegpt_commands"] or {}) do
+		for k in pairs(config.opts.commands) do
 			table.insert(cmd, k)
 		end
 		return cmd
