@@ -1,11 +1,9 @@
 -- add public vim commands
-require("codegpt.config")
-
-local CodeGptModule = require("codegpt")
+local codegpt = require("codegpt")
 local config = require("codegpt.config")
 
 vim.api.nvim_create_user_command("Chat", function(opts)
-	return CodeGptModule.run_cmd(opts)
+	return codegpt.run_cmd(opts)
 end, {
 	range = true,
 	bang = true,
@@ -20,7 +18,7 @@ end, {
 })
 
 vim.api.nvim_create_user_command("VChat", function(opts)
-	return CodeGptModule.run_cmd(opts)
+	return codegpt.run_cmd(opts)
 end, {
 	desc = "Use vertical popup in popup callbacks",
 	bang = true,
@@ -36,7 +34,7 @@ end, {
 })
 
 vim.api.nvim_create_user_command("CodeGPTStatus", function(opts)
-	print(CodeGptModule.get_status(opts))
+	print(codegpt.get_status(opts))
 end, {
 	range = true,
 	nargs = "*",

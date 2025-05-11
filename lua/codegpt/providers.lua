@@ -5,10 +5,19 @@ local OllaMaProvider = require("codegpt.providers.ollama")
 local GroqProvider = require("codegpt.providers.groq")
 local Config = require("codegpt.config")
 
-Providers = {}
+local M = {}
 
-function Providers.get_provider()
+M.available = {
+	openai = OpenAIProvider,
+	ollama = OllaMaProvider,
+	groc = GroqProvider,
+	anthropic = AnthropicProvider,
+	azure = AzureProvider,
+}
+
+function M.get_provider()
 	local provider = vim.fn.tolower(Config.opts.connection.api_provider)
+
 	if provider == "openai" then
 		return OpenAIProvider
 	elseif provider == "azure" then
@@ -24,4 +33,4 @@ function Providers.get_provider()
 	end
 end
 
-return Providers
+return M

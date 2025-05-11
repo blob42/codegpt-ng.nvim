@@ -116,14 +116,12 @@ function M.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col)
 	end
 end
 
----@type boolean
-local stream_start = true
+local streaming = false
 local stream_ui_elem = nil
 
---FIXME: this callback is called for each stream inputs so multiple calls are
---done. Should be created once at reception of first stream
 function M.popup_stream(stream, filetype, bufnr, start_row, start_col, end_row, end_col)
-	if stream_start then
+	if not streaming then
+		streaming = true
 		stream_ui_elem = create_window()
 
 		-- mount/open the component
@@ -143,8 +141,6 @@ function M.popup_stream(stream, filetype, bufnr, start_row, start_col, end_row, 
 
 		vim.api.nvim_set_option_value("filetype", filetype, { buf = stream_ui_elem.bufnr })
 		vim.api.nvim_set_option_value("wrap", true, { win = stream_ui_elem.winid })
-
-		stream_start = false
 	end
 
 	if stream_ui_elem == nil then
@@ -155,6 +151,11 @@ function M.popup_stream(stream, filetype, bufnr, start_row, start_col, end_row, 
 	if stream == nil and #buffer > 0 then
 		table.insert(lines, buffer)
 		buffer = ""
+		print("trailing buffer !")
+		streaming = false
+	elseif stream == nil then
+		streaming = false
+		return
 	else
 		local payload = vim.fn.json_decode(stream)
 		local content = payload.message.content

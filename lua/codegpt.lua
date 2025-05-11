@@ -1,8 +1,8 @@
-local Config = require("codegpt.config")
+local config = require("codegpt.config")
+local models = require("codegpt.models")
 local M = {}
 
 local Commands = require("codegpt.commands")
-local CommandsList = require("codegpt.commands_list")
 local Utils = require("codegpt.utils")
 
 local function has_command_args(opts)
@@ -17,16 +17,16 @@ end
 
 function M.run_cmd(opts)
 	if opts.name and opts.name:match("^V") then
-		Config.popup_override = "vertical"
+		config.popup_override = "vertical"
 	else
-		Config.popup_override = nil
+		config.popup_override = nil
 	end
 
 	-- handle bang
 	if opts.bang then
-		Config.persistent_override = true
+		config.persistent_override = true
 	else
-		Config.persistent_override = false
+		config.persistent_override = false
 	end
 
 	local text_selection, bounds = Utils.get_selected_lines(opts)
@@ -35,7 +35,7 @@ function M.run_cmd(opts)
 	local command = opts.fargs[1]
 
 	if command_args ~= "" then
-		local cmd_opts = CommandsList.get_cmd_opts(command)
+		local cmd_opts = Commands.get_cmd_opts(command)
 		if cmd_opts ~= nil and has_command_args(cmd_opts) then
 			if cmd_opts.allow_empty_text_selection == false and text_selection == "" then
 				command = "chat"
@@ -46,7 +46,7 @@ function M.run_cmd(opts)
 			command_args = ""
 		elseif text_selection == "" then
 			command = "chat"
-		elseif vim.g["codegpt_commands"][command] == nil then
+		elseif config.opts.commands[command] == nil then
 			command = "code_edit"
 		end
 	elseif text_selection ~= "" and command_args == "" then
@@ -59,40 +59,15 @@ function M.run_cmd(opts)
 		})
 		return
 	end
+	-- print(vim.inspect("command: " .. command))
+	-- print(vim.inspect("args: " .. command_args))
+	-- print(vim.inspect("text_selection: " .. text_selection))
+	-- print(vim.inspect("bounds: " .. bounds))
 
 	Commands.run_cmd(command, command_args, text_selection, bounds)
 end
 
---- List available models
-function M.list_models()
-	local models = Providers.get_provider().get_models()
-	vim.ui.select(models, {
-		prompt = "ollama: available models",
-		format_item = function(item)
-			return item.name
-		end,
-	}, function(choice)
-		if choice.name ~= nil and #choice.name > 0 then
-			print(choice.name)
-		end
-	end)
-end
-
-function M.select_model()
-	local models = Providers.get_provider().get_models()
-	vim.ui.select(models, {
-		prompt = "ollama: available models",
-		format_item = function(item)
-			return item.name
-		end,
-	}, function(choice)
-		if choice ~= nil and #choice.name > 0 then
-			Config.model_override = choice.name
-			print("model override = <" .. choice.name .. ">")
-		end
-	end)
-end
-
-M.setup = Config.setup
-
+M.setup = config.setup
+M.select_model = models.select_model
+M.list_models = models.list_models
 return M
