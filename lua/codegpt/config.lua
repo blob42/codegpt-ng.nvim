@@ -189,7 +189,7 @@ local defaults = {
 	},
 	ui = {
 		stream_output = false,
-		popup_border = { style = "rounded" },
+		popup_border = { style = "rounded", padding = { 0, 1 } },
 		popup_options = nil,
 		popup_window_options = {},
 		text_popup_filetype = "markdown",
