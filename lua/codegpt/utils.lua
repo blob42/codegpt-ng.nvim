@@ -1,5 +1,5 @@
 local config = require("codegpt.config")
-local Utils = {}
+local M = {}
 
 ---@param mode string
 ---@return boolean
@@ -7,12 +7,12 @@ local function is_visual_mode(mode)
 	return mode == "v" or mode == "V" or mode == "^V"
 end
 
-function Utils.get_filetype()
+function M.get_filetype()
 	local bufnr = vim.api.nvim_get_current_buf()
 	return vim.api.nvim_get_option_value("filetype", { buf = bufnr })
 end
 
-function Utils.get_visual_selection()
+function M.get_visual_selection()
 	local bufnr = vim.api.nvim_get_current_buf()
 
 	local mode = vim.fn.mode()
@@ -57,28 +57,48 @@ end
 ---@param opts table options passed by nvim_create_user_command to the callback
 ---@return string text selected text string
 ---@return bounding_box bounds text bounding box
-function Utils.get_selected_lines(opts)
+function M.get_selected_lines(opts)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local start_row, start_col, end_row, end_col
 	if (opts.line2 - opts.line1 + 1) == vim.api.nvim_buf_line_count(bufnr) then
 		start_row, start_col, end_row, end_col = 0, 0, -1, -1
 	else
-		start_row, start_col, end_row, end_col = Utils.get_visual_selection()
+		start_row, start_col, end_row, end_col = M.get_visual_selection()
 	end
 
 	local lines = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
 	return table.concat(lines, "\n"), { start_row, start_col, end_row, end_col }
 end
 
-function Utils.insert_lines(lines)
+function M.insert_lines(lines)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local line = vim.api.nvim_win_get_cursor(0)[1]
 	vim.api.nvim_buf_set_lines(bufnr, line, line, false, lines)
 	vim.api.nvim_win_set_cursor(0, { line + #lines, 0 })
 end
 
-function Utils.replace_lines(lines, bufnr, start_row, start_col, end_row, end_col)
+function M.replace_lines(lines, bufnr, start_row, start_col, end_row, end_col)
 	vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
+end
+
+function M.strip_reasoning(lines, start_token, stop_token)
+	local stripped = {}
+	local in_think = false
+	for _, line in ipairs(lines) do
+		if line:match("^" .. start_token) then
+			in_think = true
+		elseif line:match("^" .. stop_token) then
+			in_think = false
+		elseif not in_think then
+			table.insert(stripped, line)
+		end
+	end
+
+	if stripped[1] == "" then
+		table.remove(stripped, 1)
+	end
+
+	return stripped
 end
 
 local function get_code_block(lines2)
@@ -103,14 +123,14 @@ local function contains_code_block(lines2)
 	return false
 end
 
-function Utils.trim_to_code_block(lines)
+function M.trim_to_code_block(lines)
 	if contains_code_block(lines) then
 		return get_code_block(lines)
 	end
 	return lines
 end
 
-function Utils.parse_lines(response_text)
+function M.parse_lines(response_text)
 	if config.opts.write_response_to_err_log then
 		error("ChatGPT response: \n" .. response_text .. "\n")
 	end
@@ -118,7 +138,7 @@ function Utils.parse_lines(response_text)
 	return vim.fn.split(vim.trim(response_text), "\n")
 end
 
-function Utils.fix_indentation(bufnr, start_row, end_row, new_lines)
+function M.fix_indentation(bufnr, start_row, end_row, new_lines)
 	local original_lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row, true)
 	local min_indentation = math.huge
 	local original_identation = ""
@@ -138,15 +158,15 @@ function Utils.fix_indentation(bufnr, start_row, end_row, new_lines)
 	end
 end
 
-function Utils.remove_trailing_whitespace(lines)
+function M.remove_trailing_whitespace(lines)
 	for i, line in ipairs(lines) do
 		lines[i] = line:gsub("%s+$", "")
 	end
 	return lines
 end
 
-function Utils.fail_if_exceed_context_window(max_context_length, messages)
-	local ok, total_length = Utils.get_accurate_tokens(vim.fn.json_encode(messages))
+function M.fail_if_exceed_context_window(max_context_length, messages)
+	local ok, total_length = M.get_accurate_tokens(vim.fn.json_encode(messages))
 
 	if not ok then
 		for _, message in ipairs(messages) do
@@ -160,4 +180,4 @@ function Utils.fail_if_exceed_context_window(max_context_length, messages)
 	end
 end
 
-return Utils
+return M
