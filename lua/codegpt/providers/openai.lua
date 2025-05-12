@@ -10,6 +10,9 @@ local function generate_messages(command, cmd_opts, command_args, text_selection
 	local system_message =
 		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
 	local user_message = Render.render(command, cmd_opts.user_message_template, command_args, text_selection, cmd_opts)
+	if cmd_opts.append_string then
+		user_message = user_message .. " " .. cmd_opts.append_string
+	end
 
 	local messages = {}
 	if system_message ~= nil and system_message ~= "" then
@@ -24,14 +27,7 @@ local function generate_messages(command, cmd_opts, command_args, text_selection
 end
 
 local function get_max_tokens(max_tokens, messages)
-	local ok, total_length = Utils.get_accurate_tokens(vim.fn.json_encode(messages))
-
-	if not ok then
-		for _, message in ipairs(messages) do
-			total_length = total_length + string.len(message.content)
-			total_length = total_length + string.len(message.role)
-		end
-	end
+	local total_length = Tokens.get_tokens(prompt)
 
 	if total_length >= max_tokens then
 		error("Total length of messages exceeds max_tokens: " .. total_length .. " > " .. max_tokens)
@@ -40,6 +36,11 @@ local function get_max_tokens(max_tokens, messages)
 	return max_tokens - total_length
 end
 
+---@param command string
+---@param cmd_opts codegpt.CommandOpts
+---@param command_args string
+---@param text_selection string
+---@param is_stream? boolean
 function M.make_request(command, cmd_opts, command_args, text_selection)
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
 
