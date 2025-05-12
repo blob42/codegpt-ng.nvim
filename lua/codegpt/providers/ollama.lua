@@ -49,13 +49,18 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
 
-	local model_name, model = models.get_model()
-	local model_opts = vim.tbl_deep_extend("force", model or {}, model.extra_params or {})
-
-	assert(model_name and #model_name > 0, "undefined model")
-
 	-- max # of tokens to generate
 	local max_tokens = get_max_tokens(cmd_opts.max_tokens, messages)
+
+	local model_name, model = models.get_model()
+	assert(model_name and #model_name > 0, "undefined model")
+
+	local model_opts = {}
+
+	-- if model is nil just use model name in query
+	if model ~= nil then
+		model_opts = vim.tbl_deep_extend("force", model or {}, model.extra_params or {})
+	end
 
 	-- ollama uses num_ctx
 	model_opts.num_ctx = max_tokens
