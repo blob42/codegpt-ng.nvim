@@ -148,6 +148,9 @@ require("codegpt").setup({
     openai_api_key = os.getenv("OPENAI_API_KEY"),
     chat_completions_url = "https://api.openai.com/v1/chat/completions",
   },
+  models { 
+    -- model definitions
+  },
   commands = {
     -- Command defaults
   },
@@ -243,32 +246,73 @@ The `system_message_template` and `user_message_template` can contain template m
 ## Example Configuration
 
 ```lua
+
 require("codegpt").setup({
-  api = {
-    provider = "openai",
+  -- Connection settings for API providers
+  connection = {
+    api_provider = "openai",                -- Default API provider
     openai_api_key = os.getenv("OPENAI_API_KEY"),
+    chat_completions_url = "https://api.openai.com/v1/chat/completions", -- Default OpenAI endpoint
+    ollama_base_url = "http://localhost:11434",  -- Default Ollama URL
+    proxy = nil,                            -- No proxy by default
+    allow_insecure = false,                 -- Disable insecure connections by default
   },
+
+  -- UI configuration for popups
+  ui = {
+    stream_output = false,                  -- Disable streaming by default
+    popup_border = { style = "rounded", padding = { 0, 1 } },  -- Default border style
+    popup_options = nil,                    -- No additional popup options
+    text_popup_filetype = "markdown",       -- Default filetype for text
+popups
+    popup_type = "popup",                   -- Default popup type
+    horizontal_popup_size = "20%",          -- Default horizontal size
+    vertical_popup_size = "20%",            -- Default vertical size
+    spinners = { "", "", "", "", "", "" },  -- Default spinner icons
+    spinner_speed = 80,                     -- Default spinner speed
+    actions = {
+      quit = "q",                           -- Quit key
+      use_as_output = "<c-o>",              -- Use as output key
+      use_as_input = "<c-i>",               -- Use as input key
+      custom = nil,                         -- table. with custom actions
+    },
+  },
+
+  -- Model configurations grouped by provider
   models = {
+    default = "gpt-3.5-turbo",              -- Global default model
     ollama = {
-      default = 'qwen3:4b',
+      default = "gemma3:1b",                -- Ollama default model
       ['qwen3:4b'] = {
+        alias = "qwen3",                    -- Alias to call this model
         max_tokens = 8192,
         temperature = 0.8,
-        append_string = '/no_think',
+        append_string = '/no_think',		-- Custom string to append to prompt
       },
-  },
-  commands = {
-    tests = {
-      language_instructions = { java = "Use TestNG framework" },
     },
+    openai = {
+      ["gpt-3.5-turbo"] = {
+        alias = "gpt35",
+        max_tokens = 4096,
+        temperature = 0.8,
+      },
+    },
+  },
+
+  -- General options
+  clear_visual_selection = true,            -- Clear visual selection by
+
+  -- Custom hooks
+  hooks = {
+    request_started = nil,                  -- 
+    request_finished = nil,                 -- 
+  },
+
+  commands = {
+    -- Add you custom commands here. Example:
     doc = {
       language_instructions = { python = "Use Google style docstrings" },
       max_tokens = 1024,
-    },
-    code_edit = {
-      system_message_template = "You are {{language}} developer.",
-      user_message_template = "I have the following {{language}} code: ```{{filetype}}\n{{text_selection}}```\nEdit the above code. {{language_instructions}}",
-      callback_type = "code_popup",
     },
     modernize = {
       user_message_template = "I have the following {{language}} code: ```{{filetype}}\n{{text_selection}}```\nModernize the above code. Use current best practices. Only return the code snippet and comments. {{language_instructions}}",
@@ -277,25 +321,19 @@ require("codegpt").setup({
       },
     }
   },
-  ui = {
-    popup_type = "popup",
-    text_popup_filetype = "markdown",
-    commands = {
-      quit = "q",
-      use_as_output = "<c-o>",
-    },
-    popup_options = {
-      relative = "editor",
-      position = "50%",
-      size = { width = "80%", height = "80%" },
-    },
-    popup_border = { style = "rounded" },
-    popup_window_options = { wrap = true, number = true },
+
+  -- Global defaults for all models
+  global_defaults = {
+    max_tokens = 4096,
+    temperature = 0.7,
+    number_of_choices = 1,
+    system_message_template = "You are a {{language}} coding assistant.",
+    user_message_template = "",
+    callback_type = "replace_lines",
+    allow_empty_text_selection = false,
+    extra_params = {},
+    max_output_tokens = nil,
   },
-  hooks = {
-    request_started = function() vim.cmd("hi StatusLine ctermfg=yellow") end,
-    request_finished = function() vim.cmd("hi StatusLine ctermfg=NONE") end,
-  },
-  clear_visual_selection = true,
 })
+
 ```
