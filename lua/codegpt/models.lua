@@ -2,8 +2,6 @@ local config = require("codegpt.config")
 local providers = require("codegpt.providers")
 local M = {}
 
--- TODO: handle model aliases
-
 --- default model selection order from highest to lowest priority
 --- 1. global model_override (manual selection, always temporary for an nvim session)
 --- 2. provider default model
@@ -14,7 +12,7 @@ function M.get_model()
 	---@type codegpt.Model
 	local result
 
-	local provider_name = config.opts.connection.api_provider
+	local provider_name = vim.fn.tolower(config.opts.connection.api_provider)
 	-- local selected = config.model_override or config.opts.models[provider].default or config.opts.models.default
 	local selected
 	local provider_config = config.opts.models[provider_name]
@@ -26,6 +24,26 @@ function M.get_model()
 	result = config.opts.models[provider_name][selected]
 
 	return selected, result
+end
+
+---@param alias? string model alias
+---@return string name
+---@return codegpt.Model model
+function M.get_model_by_alias(alias)
+	assert(alias and #alias > 0)
+
+	local provider_name = vim.fn.tolower(config.opts.connection.api_provider)
+	local provider_config = config.opts.models[provider_name]
+	if provider_config == nil then
+		error("no models defined for " .. provider_name)
+	end
+
+	for name, model in pairs(provider_config) do
+		if model.alias == alias then
+			return name, model
+		end
+	end
+	return "", nil
 end
 
 --- List available models

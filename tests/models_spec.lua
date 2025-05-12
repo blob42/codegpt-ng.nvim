@@ -92,7 +92,6 @@ describe("models selection", function()
 	end)
 
 	it("should handle global default", function()
-		config.model_override = nil
 		codegpt.setup({
 			connection = {
 				api_provider = "openai",
@@ -109,5 +108,41 @@ describe("models selection", function()
 		local name, model = models.get_model()
 		assert(name == "gpt4-o")
 		assert(vim.deep_equal(model, { alias = "gpt4o" }))
+	end)
+
+	describe("should get model by alias", function()
+		before_each(function()
+			codegpt.setup({
+				connection = {
+					api_provider = "openai",
+				},
+				models = {
+					openai = {
+						default = "gpt4-o",
+						["gpt4-o"] = {
+							alias = "gpt4o",
+						},
+						["gpt-foo"] = {
+							alias = "foo",
+						},
+					},
+				},
+			})
+		end)
+
+		it("find model with alias", function()
+			local name, model = models.get_model_by_alias("foo")
+			assert(name == "gpt-foo")
+		end)
+
+		it("get nil if not found", function()
+			local name, model = models.get_model_by_alias("bar")
+			assert(name == "")
+			assert(model == nil)
+		end)
+
+		should_fail(function()
+			model.get_model_by_alias("")
+		end)
 	end)
 end)
