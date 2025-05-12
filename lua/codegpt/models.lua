@@ -2,6 +2,8 @@ local config = require("codegpt.config")
 local providers = require("codegpt.providers")
 local M = {}
 
+-- TODO: handle model aliases
+
 --- default model selection order from highest to lowest priority
 --- 1. global model_override (manual selection, always temporary for an nvim session)
 --- 2. provider default model
