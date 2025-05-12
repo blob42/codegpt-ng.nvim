@@ -112,7 +112,7 @@ end
 
 function Utils.parse_lines(response_text)
 	if config.opts.write_response_to_err_log then
-		vim.api.nvim_err_write("ChatGPT response: \n" .. response_text .. "\n")
+		error("ChatGPT response: \n" .. response_text .. "\n")
 	end
 
 	return vim.fn.split(vim.trim(response_text), "\n")
