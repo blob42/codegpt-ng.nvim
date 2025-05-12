@@ -3,9 +3,14 @@ local Render = require("codegpt.template_render")
 local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
+local Tokens = require("codegpt.tokens")
+local errors = require("codegpt.errors")
+
+-- TODO: handle streaming mode
 
 local M = {}
 
+---@param cmd_opts codegpt.CommandOpts
 local function generate_messages(command, cmd_opts, command_args, text_selection)
 	local system_message =
 		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
@@ -27,7 +32,7 @@ local function generate_messages(command, cmd_opts, command_args, text_selection
 end
 
 local function get_max_tokens(max_tokens, messages)
-	local total_length = Tokens.get_tokens(prompt)
+	local total_length = Tokens.get_tokens(messages)
 
 	if total_length >= max_tokens then
 		error("Total length of messages exceeds max_tokens: " .. total_length .. " > " .. max_tokens)
@@ -41,7 +46,8 @@ end
 ---@param command_args string
 ---@param text_selection string
 ---@param is_stream? boolean
-function M.make_request(command, cmd_opts, command_args, text_selection)
+function M.make_request(command, cmd_opts, command_args, text_selection, is_stream)
+	local models = require("codegpt.models")
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
 
 	local max_tokens = cmd_opts.max_tokens
@@ -52,15 +58,21 @@ function M.make_request(command, cmd_opts, command_args, text_selection)
 		max_tokens = get_max_tokens(cmd_opts.max_tokens, messages)
 	end
 
+	local model_name, model = models.get_model()
+	assert(model_name and #model_name > 0, "undefined model")
+
 	local request = {
 		temperature = cmd_opts.temperature,
 		n = cmd_opts.number_of_choices,
-		model = cmd_opts.model,
+		model = model_name,
 		messages = messages,
 		max_tokens = max_tokens,
+		stream = is_stream or false,
 	}
 
-	request = vim.tbl_extend("force", request, cmd_opts.extra_params)
+	if model ~= nil then
+		request = vim.tbl_extend("force", request, model.extra_params or {})
+	end
 	return request
 end
 
@@ -87,7 +99,7 @@ local function curl_callback(response, cb)
 end
 
 function M.make_headers()
-	local token = vim.g["codegpt_openai_api_key"]
+	local token = Config.opts.connection.openai_api_key
 	if not token then
 		error(
 			"OpenAIApi Key not found, set in vim with 'codegpt_openai_api_key' or as the env variable 'OPENAI_API_KEY'"
@@ -99,17 +111,26 @@ end
 
 function M.handle_response(json, cb)
 	if json == nil then
-		print("Response empty")
+		vim.schedule_wrap(function()
+			errors.api_error("openai", "Empty response")
+		end)
 	elseif json.error then
 		print("Error: " .. json.error.message)
+		vim.schedule_wrap(function(msg)
+			errors.api_error("openai", msg)
+		end)("Error: " .. json.error.message)
 	elseif not json.choices or 0 == #json.choices or not json.choices[1].message then
-		print("Error: " .. vim.fn.json_encode(json))
+		vim.schedule_wrap(function(msg)
+			errors.api_error("openai", msg)
+		end)("Error: " .. vim.fn.json_encode(json))
 	else
 		local response_text = json.choices[1].message.content
 
 		if response_text ~= nil then
 			if type(response_text) ~= "string" or response_text == "" then
-				print("Error: No response text " .. type(response_text))
+				vim.schedule_wrap(function()
+					errors.api_error("openai", "No response text " .. type(response_text))
+				end)
 			else
 				local bufnr = vim.api.nvim_get_current_buf()
 				if Config.opts.clear_visual_selection then
@@ -119,7 +140,9 @@ function M.handle_response(json, cb)
 				cb(Utils.parse_lines(response_text))
 			end
 		else
-			print("Error: No message")
+			vim.schedule_wrap(function()
+				errors.api_error("openai", "No message")
+			end)
 		end
 	end
 end
@@ -141,6 +164,8 @@ function M.make_call(payload, cb)
 			end, 0)
 			Api.run_finished_hook()
 		end,
+		insecure = Config.opts.connection.allow_insecure,
+		proxy = Config.opts.connection.proxy,
 	})
 end
 
