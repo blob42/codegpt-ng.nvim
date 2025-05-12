@@ -16,12 +16,32 @@ function M.get_model()
 	-- local selected = config.model_override or config.opts.models[provider].default or config.opts.models.default
 	local selected
 	local provider_config = config.opts.models[provider_name]
+
+	-- of provider config is a string, then it must be just a model name
+	if type(provider_config) == "string" and #provider_config > 0 then
+		return provider_config, nil
+	end
+	assert(type(provider_config) == "table")
+
 	if provider_config == nil then
 		error("no models defined for " .. provider_name)
 	end
-	selected = config.model_override or provider_config.default or config.opts.models.default
 
-	result = config.opts.models[provider_name][selected]
+	selected = config.model_override or provider_config.default or config.opts.models.default
+	assert(type(selected) == "string")
+
+	result = provider_config[selected]
+
+	-- try to get model by alias
+	if result == nil then
+		for name, model in pairs(provider_config) do
+			if model.alias == selected then
+				result = model
+				selected = name
+				break
+			end
+		end
+	end
 
 	return selected, result
 end

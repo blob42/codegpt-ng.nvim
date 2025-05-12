@@ -145,4 +145,23 @@ describe("models selection", function()
 			model.get_model_by_alias("")
 		end)
 	end)
+
+	it("should get default model by alias", function()
+		codegpt.setup({
+			connection = {
+				api_provider = "openai",
+			},
+			models = {
+				openai = {
+					default = "gpt4o",
+					["gpt4-o"] = {
+						alias = "gpt4o",
+					},
+				},
+			},
+		})
+
+		local name, model = models.get_model()
+		assert(name == "gpt4-o")
+	end)
 end)
