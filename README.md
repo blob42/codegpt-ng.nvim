@@ -8,8 +8,9 @@ All credit goes to him for the initial work.
 This fork does the following:
 
 - **Full support for Ollama API** 
-- **New table-based configuration** instead of global variables
+- [**New table-based configuration**](#example-configuration) instead of global variables
 - **Streaming mode** for real-time popup responses
+- [**New commands**](#other-available-commands) and added support to the `%` range modifier. 
 - **Refactored for idiomatic Lua** and neovim plugin style
 - **Simplified command system** with explicit configuration
 - **Tests with plenary library**
@@ -34,7 +35,7 @@ Installing with Lazy.
     -- API configuration
     api = {
       provider = "openai",  -- or "Ollama", "Azure", etc.
-      openai_api_key = os.getenv("OPENAI_API_KEY"),
+      openai_api_key = vim.fn.getenv "OPENAI_API_KEY",
       chat_completions_url = "https://api.openai.com/v1/chat/completions",
     },
     
@@ -101,7 +102,6 @@ use({
 
 The top-level command is `:Chat`. The behavior is different depending on whether text is selected and/or arguments are passed.
 
-You can also use `:VChat` to temporary enforce the vertical layout.
 
 ### Completion
 * `:Chat` with text selection will trigger the `completion` command, ChatGPT will try to complete the selected code snippet.
@@ -123,7 +123,13 @@ You can also use `:VChat` to temporary enforce the vertical layout.
 
 ![chat](examples/chat.gif?raw=true)
 
-A full list of predefined commands are below
+#### Other available commands:
+
+- Range character `%Chat` to select all buffer.
+- `:VChat`: to temporary enforce the vertical layout.
+- `Chat!`: To make popup window persistent when the cursor leaves.
+
+Here is the full list of predefined command actions:
 
 | command      | input | Description |
 |--------------|---- |------------------------------------|
@@ -145,7 +151,7 @@ A full list of predefined commands are below
 require("codegpt").setup({
   api = {
     provider = "openai",  -- or "Ollama", "Azure", etc.
-    openai_api_key = os.getenv("OPENAI_API_KEY"),
+    openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
     chat_completions_url = "https://api.openai.com/v1/chat/completions",
   },
   models { 
@@ -251,7 +257,7 @@ require("codegpt").setup({
   -- Connection settings for API providers
   connection = {
     api_provider = "openai",                -- Default API provider
-    openai_api_key = os.getenv("OPENAI_API_KEY"),
+    openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
     chat_completions_url = "https://api.openai.com/v1/chat/completions", -- Default OpenAI endpoint
     ollama_base_url = "http://localhost:11434",  -- Default Ollama URL
     proxy = nil,                            -- No proxy by default
