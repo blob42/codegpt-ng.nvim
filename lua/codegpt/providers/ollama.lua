@@ -50,7 +50,7 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
 
 	local model_name, model = models.get_model()
-	local model_opts = model or {}
+	local model_opts = vim.tbl_deep_extend("force", model or {}, model.extra_params or {})
 
 	assert(model_name and #model_name > 0, "undefined model")
 
