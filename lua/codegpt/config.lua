@@ -41,6 +41,7 @@ local M = {}
 ---@field callback_type? codegpt.CallbackType
 ---@field temperature? number Custom temperature for this command
 ---@field max_tokens? number Custom max_tokens for this command
+---@field append_string? string String to append to prompt -- ex: /no_think
 
 ---@type { [string]: codegpt.CommandOpts }
 local default_commands = {
@@ -145,6 +146,7 @@ M.persistent_override = nil
 ---This is useful trigger different instructions for different languages.
 ---@field callback_type? codegpt.CallbackType Controls what the plugin does with the response
 ---@field extra_params? table Custom parameters to include with this model query
+---@field append_string? string String to append to prompt -- ex: /no_think
 
 ---@alias ModelDef { [string] : codegpt.Model | string }
 

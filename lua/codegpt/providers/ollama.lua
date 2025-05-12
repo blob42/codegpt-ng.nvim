@@ -8,10 +8,14 @@ local errors = require("codegpt.errors")
 
 local M = {}
 
+---@param cmd_opts codegpt.CommandOpts
 local function generate_messages(command, cmd_opts, command_args, text_selection)
 	local system_message =
 		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
 	local user_message = Render.render(command, cmd_opts.user_message_template, command_args, text_selection, cmd_opts)
+	if cmd_opts.append_string then
+		user_message = user_message .. " " .. cmd_opts.append_string
+	end
 
 	local messages = {}
 	if system_message ~= nil and system_message ~= "" then
