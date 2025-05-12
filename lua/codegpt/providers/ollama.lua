@@ -62,9 +62,12 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 		model_opts = vim.tbl_deep_extend("force", model or {}, model.extra_params or {})
 	end
 
-	-- ollama uses num_ctx
+	-- convert params to ollama api
 	model_opts.num_ctx = max_tokens
 	model_opts.max_tokens = nil
+
+	model_opts.num_predict = model_opts.max_output_tokens
+	model_opts.max_output_tokens = nil
 
 	model_opts.temperature = cmd_opts.temperature
 
@@ -100,7 +103,9 @@ function M.handle_response(json, cb)
 
 		if response_text ~= nil then
 			if type(response_text) ~= "string" or response_text == "" then
-				print("No response text " .. type(response_text))
+				vim.schedule_wrap(function()
+					errors.api_error("ollama", "No response text " .. type(response_text))
+				end)
 			else
 				local bufnr = vim.api.nvim_get_current_buf()
 				if Config.opts.clear_visual_selection then
