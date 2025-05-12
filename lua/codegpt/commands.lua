@@ -24,6 +24,7 @@ M.CallbackTypes = {
 		Ui.popup(lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
 	end,
 	["replace_lines"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
+		lines = Utils.strip_reasoning(lines, "<think>", "</think>")
 		lines = Utils.trim_to_code_block(lines)
 		lines = Utils.remove_trailing_whitespace(lines)
 		Utils.fix_indentation(bufnr, start_row, end_row, lines)
