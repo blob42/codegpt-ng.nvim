@@ -232,7 +232,7 @@ local defaults = {
 	},
 	commands = default_commands,
 
-	-- general global defaults that will be overriden by all other config values
+	-- general global defaults used as fallback if not defined elsewhere
 	global_defaults = {
 		max_tokens = 4096,
 		temperature = 0.7,
@@ -255,8 +255,8 @@ M.setup = function(options)
 	M.opts = vim.tbl_deep_extend("force", {}, defaults, options or {})
 
 	-- env takes precedences
-	if os.getenv("OPENAI_API_KEY") ~= nil then
-		M.opts.connection.openai_api_key = os.getenv("OPENAI_API_KEY")
+	if vim.fn.getenv("OPENAI_API_KEY") ~= nil then
+		M.opts.connection.openai_api_key = vim.fn.getenv("OPENAI_API_KEY")
 	end
 
 	-- print(vim.inspect(M.opts))
