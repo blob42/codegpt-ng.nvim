@@ -1,7 +1,7 @@
 local utils = require("codegpt.utils")
 
 describe("parsing llm response", function()
-	it("should extract code", function()
+	it("should extract code from reasoning", function()
 		local input = [[
 <think>
 Okay, the user is asking how to get the first element of an array in Lua, and they just want the code. Let me think.
