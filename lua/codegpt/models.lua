@@ -66,21 +66,78 @@ function M.get_model_by_alias(alias)
 	return "", nil
 end
 
+---@return table[]
+function M.get_remote_models()
+	local models = providers.get_provider().get_models()
+	if models ~= nil then
+		models = vim.tbl_map(function(remote)
+			remote.model_source = "remote"
+			return remote
+		end, models)
+	else
+		return {}
+	end
+	return models
+end
+
+---@param provider string
+---@return table[] models list of locally defined models
+function M.get_local_models(provider)
+	local provider_config = config.opts.models[provider]
+
+	-- models defined by name only are skipped since they must be a remote one
+	if type(provider_config) == "string" then
+		return {}
+	end
+
+	assert(type(provider_config) == "table")
+
+	local models = {}
+	for name, model in pairs(provider_config) do
+		if name == "default" then
+			goto continue
+		end
+		model.model_source = "local"
+		model.name = name
+		table.insert(models, model)
+		::continue::
+	end
+
+	return models
+end
+
 --- List available models
 function M.list_models()
-	local models = providers.get_provider().get_models()
+	local remote_models = M.get_remote_models()
+	local models = vim.tbl_extend("force", {}, remote_models)
+
+	-- get local defined models
+	local used_provider = vim.fn.tolower(config.opts.connection.api_provider)
+	local local_models = M.get_local_models(used_provider)
+	models = vim.tbl_extend("force", models, local_models)
+
 	if models == nil then
 		error("listing models")
 	end
+
 	vim.ui.select(models, {
 		prompt = "ollama: available models",
 		format_item = function(item)
-			return item.name
+			local display = ""
+			if item.model_source == "local" then
+				display = "[L] "
+			elseif item.model_source == "remote" then
+				display = "[R] "
+			end
+			if item.alias then
+				display = display .. "(" .. item.alias .. ") "
+			end
+			return display .. item.name
 		end,
 	}, function(choice)
 		if choice ~= nil then
 			if choice.name ~= nil and #choice.name > 0 then
-				print(choice.name)
+				print("selected <" .. choice.name .. "> (" .. choice.model_source .. " defined)")
 			end
 		end
 	end)
