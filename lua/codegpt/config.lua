@@ -210,6 +210,7 @@ local defaults = {
 			quit = "q", -- key to quit the popup
 			use_as_output = "<c-o>", -- key to use the popup content as output and replace the original lines
 			use_as_input = "<c-i>", -- key to use the popup content as input for a new API request
+			cancel = "<c-c>", -- cancel current request
 			custom = {}, -- define your custom mappings here
 		},
 	},

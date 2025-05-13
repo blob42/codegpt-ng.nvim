@@ -7,23 +7,23 @@ local models = require("codegpt.models")
 
 local M = {}
 
-local text_popup_stream = function(stream, bufnr, start_row, start_col, end_row, end_col)
+local text_popup_stream = function(job, stream, bufnr, start_row, start_col, end_row, end_col)
 	local popup_filetype = Config.opts.ui.text_popup_filetype
-	Ui.popup_stream(stream, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
+	Ui.popup_stream(job, stream, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
 end
 
 M.CallbackTypes = {
 	["text_popup_stream"] = text_popup_stream,
-	["text_popup"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
+	["text_popup"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
 		local popup_filetype = Config.opts.ui.text_popup_filetype
-		Ui.popup(lines, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
+		Ui.popup(job, lines, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
 	end,
-	["code_popup"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
+	["code_popup"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
 		lines = Utils.trim_to_code_block(lines)
 		Utils.fix_indentation(bufnr, start_row, end_row, lines)
-		Ui.popup(lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
+		Ui.popup(job, lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
 	end,
-	["replace_lines"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
+	["replace_lines"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
 		lines = Utils.strip_reasoning(lines, "<think>", "</think>")
 		lines = Utils.trim_to_code_block(lines)
 		lines = Utils.remove_trailing_whitespace(lines)
@@ -32,7 +32,7 @@ M.CallbackTypes = {
 			Utils.replace_lines(lines, bufnr, start_row, start_col, end_row, end_col)
 		else
 			-- if the buffer is not valid, open a popup. This can happen when the user closes the previous popup window before the request is finished.
-			Ui.popup(lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
+			Ui.popup(job, lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
 		end
 	end,
 	["custom"] = nil,
@@ -51,7 +51,7 @@ local function get_cmd_opts(cmd)
 	local is_stream = false
 
 	local model
-	if opts.model then
+	if opts ~= nil and opts.model then
 		_, model = models.get_model_by_name(opts.model)
 	else
 		_, model = models.get_model()
@@ -96,12 +96,12 @@ function M.run_cmd(command, command_args, text_selection, bounds)
 	local new_callback = nil
 
 	if is_stream then
-		new_callback = function(stream)
-			cmd_opts.callback(stream, bufnr, unpack(bounds))
+		new_callback = function(stream, job)
+			cmd_opts.callback(job, stream, bufnr, unpack(bounds))
 		end
 	else
-		new_callback = function(lines) -- called from Provider.handle_response
-			cmd_opts.callback(lines, bufnr, unpack(bounds))
+		new_callback = function(lines, job) -- called from Provider.handle_response
+			cmd_opts.callback(job, lines, bufnr, unpack(bounds))
 		end
 	end
 

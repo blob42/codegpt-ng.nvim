@@ -77,7 +77,7 @@ local function create_window()
 	return ui_elem
 end
 
-function M.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col)
+function M.popup(job, lines, filetype, bufnr, start_row, start_col, end_row, end_col)
 	local ui_elem = create_window()
 	-- mount/open the component
 	ui_elem:mount()
@@ -92,6 +92,11 @@ function M.popup(lines, filetype, bufnr, start_row, start_col, end_row, end_col)
 	-- unmount component when key 'q'
 	ui_elem:map("n", config.opts.ui.actions.quit, function()
 		ui_elem:unmount()
+	end, { noremap = true, silent = true })
+	--
+	-- cancel job if actions.cancel is called
+	ui_elem:map("n", config.opts.ui.actions.cancel, function()
+		job:shutdown()
 	end, { noremap = true, silent = true })
 
 	-- set content
@@ -119,7 +124,7 @@ end
 local streaming = false
 local stream_ui_elem = nil
 
-function M.popup_stream(stream, filetype, bufnr, start_row, start_col, end_row, end_col)
+function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_row, end_col)
 	if not streaming then
 		streaming = true
 		stream_ui_elem = create_window()
@@ -139,6 +144,11 @@ function M.popup_stream(stream, filetype, bufnr, start_row, start_col, end_row, 
 			stream_ui_elem:unmount()
 		end, { noremap = true, silent = true })
 
+		-- cancel job if actions.cancel is called
+		stream_ui_elem:map("n", config.opts.ui.actions.cancel, function()
+			job:shutdown()
+		end, { noremap = true, silent = true })
+
 		vim.api.nvim_set_option_value("filetype", filetype, { buf = stream_ui_elem.bufnr })
 		vim.api.nvim_set_option_value("wrap", true, { win = stream_ui_elem.winid })
 	end
@@ -156,7 +166,13 @@ function M.popup_stream(stream, filetype, bufnr, start_row, start_col, end_row, 
 		streaming = false
 		return
 	else
-		local payload = vim.fn.json_decode(stream)
+		local ok, payload = pcall(function()
+			return vim.fn.json_decode(stream)
+		end)
+		if not ok then
+			streaming = false
+			return
+		end
 		local content = payload.message.content
 		local content_lines = vim.split(content, "\n")
 		if #content_lines == 1 then

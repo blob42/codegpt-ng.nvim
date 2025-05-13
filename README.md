@@ -11,6 +11,7 @@ This fork does the following:
 - **Streaming mode** for real-time popup responses
 - [**New table-based configuration**](#example-configuration) instead of global variables
 - [**New commands**](#other-available-commands) and added support to the `%` range modifier
+- **Ability to cancel** current request.
 - **UI Query and select** local or remote model
 - **Strips thinking tokens** from replies if the model forgets to use codeblocks
 - **Refactored for idiomatic Lua** and neovim plugin style
