@@ -5,13 +5,16 @@ local config = require("codegpt.config")
 vim.api.nvim_create_user_command("Chat", function(opts)
 	return codegpt.run_cmd(opts)
 end, {
+	desc = "Start codegpt chat",
 	range = true,
 	bang = true,
 	nargs = "*",
-	complete = function()
+	complete = function(arglead)
 		local cmd = {}
 		for k in pairs(config.opts.commands) do
-			table.insert(cmd, k)
+			if k:match(arglead) then
+				table.insert(cmd, k)
+			end
 		end
 		return cmd
 	end,
@@ -20,14 +23,16 @@ end, {
 vim.api.nvim_create_user_command("VChat", function(opts)
 	return codegpt.run_cmd(opts)
 end, {
-	desc = "Use vertical popup in popup callbacks",
+	desc = "Codegpt chat: force use vertical popup",
 	bang = true,
 	range = true,
 	nargs = "*",
-	complete = function()
+	complete = function(arglead)
 		local cmd = {}
 		for k in pairs(config.opts.commands) do
-			table.insert(cmd, k)
+			if k:match(arglead) then
+				table.insert(cmd, k)
+			end
 		end
 		return cmd
 	end,
