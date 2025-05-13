@@ -151,7 +151,6 @@ function M.popup_stream(stream, filetype, bufnr, start_row, start_col, end_row, 
 	if stream == nil and #buffer > 0 then
 		table.insert(lines, buffer)
 		buffer = ""
-		print("trailing buffer !")
 		streaming = false
 	elseif stream == nil then
 		streaming = false

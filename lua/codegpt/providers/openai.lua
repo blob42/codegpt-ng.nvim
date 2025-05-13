@@ -58,8 +58,7 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 		max_tokens = get_max_tokens(cmd_opts.max_tokens, messages)
 	end
 
-	local model_name, model = models.get_model()
-	assert(model_name and #model_name > 0, "undefined model")
+	local model_name, model = models.get_model_for_cmdopts(cmd_opts)
 
 	local request = {
 		temperature = cmd_opts.temperature,

@@ -46,14 +46,11 @@ end
 ---@param is_stream? boolean
 function M.make_request(command, cmd_opts, command_args, text_selection, is_stream)
 	local models = require("codegpt.models")
-
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
 
 	-- max # of tokens to generate
 	local max_tokens = get_max_tokens(cmd_opts.max_tokens, messages)
-
-	local model_name, model = models.get_model()
-	assert(model_name and #model_name > 0, "undefined model")
+	local model_name, model = models.get_model_for_cmdopts(cmd_opts)
 
 	local model_opts = {}
 
