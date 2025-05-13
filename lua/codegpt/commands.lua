@@ -2,20 +2,20 @@ local Utils = require("codegpt.utils")
 local Ui = require("codegpt.ui")
 local Providers = require("codegpt.providers")
 local Api = require("codegpt.api")
-local config = require("codegpt.config")
+local Config = require("codegpt.config")
 local models = require("codegpt.models")
 
 local M = {}
 
 local text_popup_stream = function(stream, bufnr, start_row, start_col, end_row, end_col)
-	local popup_filetype = config.opts.ui.text_popup_filetype
+	local popup_filetype = Config.opts.ui.text_popup_filetype
 	Ui.popup_stream(stream, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
 end
 
 M.CallbackTypes = {
 	["text_popup_stream"] = text_popup_stream,
 	["text_popup"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
-		local popup_filetype = config.opts.ui.text_popup_filetype
+		local popup_filetype = Config.opts.ui.text_popup_filetype
 		Ui.popup(lines, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
 	end,
 	["code_popup"] = function(lines, bufnr, start_row, start_col, end_row, end_col)
@@ -45,15 +45,21 @@ M.CallbackTypes = {
 ---@return table opts parsed options
 ---@return boolean is_stream streaming enabled
 local function get_cmd_opts(cmd)
-	local opts = config.opts.commands[cmd]
-	local cmd_defaults = config.opts.global_defaults
+	local opts = Config.opts.commands[cmd]
+	-- print(vim.inspect(opts))
+	local cmd_defaults = Config.opts.global_defaults
 	local is_stream = false
 
 	-- print(vim.inspect(cmd))
 	-- print(vim.inspect(config.opts.commands))
 	-- print(vim.inspect(opts))
 
-	local _, model = models.get_model()
+	local model
+	if opts.model then
+		_, model = models.get_model_by_name(opts.model)
+	else
+		_, model = models.get_model()
+	end
 
 	---@type codegpt.CommandOpts
 	--- options priority heighest->lowest: cmd options, model options, global
@@ -63,7 +69,7 @@ local function get_cmd_opts(cmd)
 		opts.callback = opts.callback_type
 	else
 		if
-			(config.opts.ui.stream_output and opts.callback_type == "text_popup")
+			(Config.opts.ui.stream_output and opts.callback_type == "text_popup")
 			or opts.callback_type == "test_popup_stream"
 		then
 			opts.callback = text_popup_stream
@@ -72,6 +78,8 @@ local function get_cmd_opts(cmd)
 			opts.callback = M.CallbackTypes[opts.callback_type]
 		end
 	end
+	-- print(vim.inspect(opts))
+	-- error(1)
 
 	return opts, is_stream
 end

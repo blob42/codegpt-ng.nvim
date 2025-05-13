@@ -42,6 +42,7 @@ local M = {}
 ---@field temperature? number Custom temperature for this command
 ---@field max_tokens? number Custom max_tokens for this command
 ---@field append_string? string String to append to prompt -- ex: /no_think
+---@field model? string Model to always use with this command
 
 ---@type { [string]: codegpt.CommandOpts }
 local default_commands = {

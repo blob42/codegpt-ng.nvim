@@ -87,4 +87,28 @@ describe("cmd opts", function()
 			assert(opts.max_tokens == 4242)
 		end)
 	end)
+
+	it("should prioritize command model ", function()
+		codegpt.setup({
+			commands = {
+				foocmd = {
+					model = "foomodel",
+				},
+			},
+			models = {
+				openai = {
+					default = "barmodel",
+					barmodel = {
+						alias = "llamabar",
+					},
+					foomodel = {
+						alias = "llamafoo",
+					},
+				},
+			},
+		})
+		local cmds = require("codegpt.commands")
+		local opts = cmds.get_cmd_opts("foocmd")
+		assert(opts.model == "foomodel")
+	end)
 end)
