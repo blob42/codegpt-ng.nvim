@@ -50,10 +50,6 @@ local function get_cmd_opts(cmd)
 	local cmd_defaults = Config.opts.global_defaults
 	local is_stream = false
 
-	-- print(vim.inspect(cmd))
-	-- print(vim.inspect(config.opts.commands))
-	-- print(vim.inspect(opts))
-
 	local model
 	if opts.model then
 		_, model = models.get_model_by_name(opts.model)
@@ -78,8 +74,6 @@ local function get_cmd_opts(cmd)
 			opts.callback = M.CallbackTypes[opts.callback_type]
 		end
 	end
-	-- print(vim.inspect(opts))
-	-- error(1)
 
 	return opts, is_stream
 end
@@ -97,10 +91,6 @@ function M.run_cmd(command, command_args, text_selection, bounds)
 		})
 		return
 	end
-
-	-- print(vim.inspect(cmd_opts))
-	-- print(vim.inspect(is_stream))
-	-- error(50)
 
 	local bufnr = vim.api.nvim_get_current_buf()
 	local new_callback = nil
