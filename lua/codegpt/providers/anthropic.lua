@@ -127,7 +127,7 @@ function M.make_call(payload, cb)
 end
 
 function M.get_models()
-	vim.notify("not implemented", vim.log.levels.WARN)
+	vim.notify("anthropic: not implemented", vim.log.levels.WARN)
 end
 
 return M
