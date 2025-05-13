@@ -1,21 +1,26 @@
 # codegpt-ng.nvim
 
-**codegpt-ng** is a minimalist plugin for neovim that provides commands to interact with AI backend. The focus is around code related usages. So code completion, refactorings, generating docs, etc.
+**codegpt-ng** is a minimalist plugin for neovim that provides commands to interact with AI backends. The focus is around code related usages. So code completion, refactorings, generating docs, etc.
 
 This is a fork of the original **CodeGPT** repository from github user @dpayne.
 All credit goes to him for the initial work.
 
 This fork does the following:
 
-- **Full support for Ollama API** 
-- [**New table-based configuration**](#example-configuration) instead of global variables
+- **Full support for Ollama and OpenAI API** 
 - **Streaming mode** for real-time popup responses
-- [**New commands**](#other-available-commands) and added support to the `%` range modifier. 
+- [**New table-based configuration**](#example-configuration) instead of global variables
+- [**New commands**](#other-available-commands) and added support to the `%` range modifier
+- **UI Query and select** local or remote model
+- **Strips thinking tokens** from replies if the model forgets to use codeblocks
 - **Refactored for idiomatic Lua** and neovim plugin style
 - **Simplified command system** with explicit configuration
 - **Tests with plenary library**
+- **Fixed statusline** integration
 
-Although this fork introduces breaking changes and a complete rewrite, I've tried to preserve the original project's minimalist ethos — a tool that connects to AI APIs without getting in the way. The goal remains to provide simple, code-focused interactions that stay lightweight and unobtrusive, letting developers leverage AI power while maintaining control over their workflow.
+Although this fork introduces breaking changes and a substantial rewrite, I've tried to preserve the original project's minimalist spirit — a tool that connects to AI APIs without getting in the way. The goal remains to provide simple, code-focused interactions that stay lightweight and unobtrusive, letting developers leverage AI power while maintaining control over their workflow.
+
+In particular, the model definition flow was carefully designed to quickly add custom model profiles for specific cases and easily switch between them or assign them to custom commands.
 
 
 ## Installation
@@ -34,7 +39,7 @@ Installing with Lazy.
   opts = {
     -- API configuration
     api = {
-      provider = "openai",  -- or "Ollama", "Azure", etc.
+      provider = "openai",  -- or "ollama", "azure", etc.
       openai_api_key = vim.fn.getenv "OPENAI_API_KEY",
       chat_completions_url = "https://api.openai.com/v1/chat/completions",
     },
@@ -259,8 +264,8 @@ require("codegpt").setup({
     api_provider = "openai",                -- Default API provider
     openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
     chat_completions_url = "https://api.openai.com/v1/chat/completions", -- Default OpenAI endpoint
-    ollama_base_url = "http://localhost:11434",  -- Default Ollama URL
-    proxy = nil,                            -- No proxy by default
+    ollama_base_url = "http://localhost:11434",  -- Ollama base URL
+    proxy = nil,                            -- Can also be set with $http_proxy environment variable
     allow_insecure = false,                 -- Disable insecure connections by default
   },
 
@@ -293,7 +298,7 @@ popups
         alias = "qwen3",                    -- Alias to call this model
         max_tokens = 8192,
         temperature = 0.8,
-        append_string = '/no_think',		-- Custom string to append to prompt
+        append_string = '/no_think',		-- Custom string to append to the prompt
       },
     },
     openai = {
@@ -306,11 +311,11 @@ popups
   },
 
   -- General options
-  clear_visual_selection = true,            -- Clear visual selection by
+  clear_visual_selection = true,            -- Clear visual selection when the command starts
 
   -- Custom hooks
   hooks = {
-    request_started = nil,                  -- 
+    request_started = nil,                  --  
     request_finished = nil,                 -- 
   },
 
