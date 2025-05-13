@@ -3,6 +3,7 @@ local Render = require("codegpt.template_render")
 local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
+local errors = require("codegpt.errors")
 
 local M = {}
 
@@ -203,12 +204,7 @@ function M.make_call(payload, cb)
 		callback = function(response)
 			curl_callback(response, cb)
 		end,
-		on_error = function(err)
-			vim.defer_fn(function()
-				vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
-			end, 0)
-			Api.run_finished_hook()
-		end,
+		on_error = errors.curl_error,
 		insecure = Config.opts.connection.allow_insecure,
 		proxy = Config.opts.connection.proxy,
 	})

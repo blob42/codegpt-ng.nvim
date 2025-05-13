@@ -166,12 +166,7 @@ function M.make_call(payload, cb)
 		callback = function(response)
 			curl_callback(response, cb, false)
 		end,
-		on_error = function(err)
-			vim.schedule_wrap(function(msg)
-				errors.err("curl: " .. msg)
-			end)(err.message)
-			Api.run_finished_hook()
-		end,
+		on_error = errors.curl_error,
 		insecure = Config.opts.connection.allow_insecure,
 		proxy = Config.opts.connection.proxy,
 	})
@@ -187,27 +182,21 @@ function M.make_stream_call(payload, stream_cb)
 	curl.post(url, {
 		body = payload_str,
 		headers = headers,
-		stream = function(error, data)
+		stream = function(error, data, job)
 			if error ~= nil then
 				vim.schedule_wrap(function(err)
 					vim.notify(err, vim.log.levels.ERROR)
 				end)(error)
 			end
-			-- stream_cb(data)
-			vim.schedule_wrap(function(msg)
-				stream_cb(msg)
-			end)(data)
+			vim.schedule_wrap(function(dat, jb)
+				stream_cb(dat, jb)
+			end)(data, job)
 		end,
 		callback = function(response)
 			curl_callback(response, nil, true)
 			Api.run_finished_hook()
 		end,
-		on_error = function(err)
-			vim.defer_fn(function()
-				vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
-			end, 0)
-			Api.run_finished_hook()
-		end,
+		on_error = errors.curl_error,
 		insecure = Config.opts.connection.allow_insecure,
 		proxy = Config.opts.connection.proxy,
 	})
