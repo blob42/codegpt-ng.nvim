@@ -157,12 +157,7 @@ function M.make_call(payload, cb)
 		callback = function(response)
 			curl_callback(response, cb)
 		end,
-		on_error = function(err)
-			vim.defer_fn(function()
-				vim.notify("curl error: " .. err.message, vim.log.levels.ERROR)
-			end, 0)
-			Api.run_finished_hook()
-		end,
+		on_error = errors.curl_error,
 		insecure = Config.opts.connection.allow_insecure,
 		proxy = Config.opts.connection.proxy,
 	})
