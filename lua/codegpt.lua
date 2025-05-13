@@ -22,7 +22,7 @@ function M.run_cmd(opts)
 		config.popup_override = nil
 	end
 
-	-- handle bang
+	-- bang makes popup persistent until closed
 	if opts.bang then
 		config.persistent_override = true
 	else
@@ -59,15 +59,11 @@ function M.run_cmd(opts)
 		})
 		return
 	end
-	-- print(vim.inspect("command: " .. command))
-	-- print(vim.inspect("args: " .. command_args))
-	-- print(vim.inspect("text_selection: " .. text_selection))
-	-- print(vim.inspect("bounds: " .. bounds))
 
 	Commands.run_cmd(command, command_args, text_selection, bounds)
 end
 
 M.setup = config.setup
 M.select_model = models.select_model
-M.list_models = models.list_models
+
 return M
