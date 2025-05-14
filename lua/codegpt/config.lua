@@ -128,10 +128,12 @@ M.persistent_override = nil
 --- custom callback function. receives the output from the LLM model `lines`, the `bufnr` where the command or selection was made, and the coordinates of the visual selection if any or nil values
 
 ---@alias codegpt.CallbackType
----| "text_popup"
----| "test_popup_stream"
----| "code_popup"
----| "replace_lines"
+---| "text_popup" # simple text popup
+---| "test_popup_stream" # popup with streaming
+---| "code_popup" # code only popup with corresponding filetype
+---| "replace_lines" # replace selected text
+---| "insert_lines" # insert below cursor position
+---| "prepend_lines" # insert above cursor position
 ---| codegpt.CallbackCustom
 
 ---@class codegpt.Model
