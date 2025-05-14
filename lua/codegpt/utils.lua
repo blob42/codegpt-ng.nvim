@@ -70,6 +70,12 @@ function M.get_selected_lines(opts)
 	return table.concat(lines, "\n"), { start_row, start_col, end_row, end_col }
 end
 
+function M.prepend_lines(lines)
+	local bufnr = vim.api.nvim_get_current_buf()
+	local line = vim.api.nvim_win_get_cursor(0)[1]
+	vim.api.nvim_buf_set_lines(bufnr, line - 1, line - 1, false, lines)
+end
+
 function M.insert_lines(lines)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local line = vim.api.nvim_win_get_cursor(0)[1]

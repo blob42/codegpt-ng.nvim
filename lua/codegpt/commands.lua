@@ -12,6 +12,19 @@ local text_popup_stream = function(job, stream, bufnr, start_row, start_col, end
 	Ui.popup_stream(job, stream, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
 end
 
+local function replacement(lines, bufnr, start_row, start_col, end_row, end_col)
+	lines = Utils.strip_reasoning(lines, "<think>", "</think>")
+	lines = Utils.trim_to_code_block(lines)
+	lines = Utils.remove_trailing_whitespace(lines)
+	Utils.fix_indentation(bufnr, start_row, end_row, lines)
+	-- if the buffer is not valid, open a popup. This can happen when the user closes the previous popup window before the request is finished.
+	if vim.api.nvim_buf_is_valid(bufnr) ~= true then
+		Ui.popup(job, lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
+	else
+		return lines
+	end
+end
+
 M.CallbackTypes = {
 	["text_popup_stream"] = text_popup_stream,
 	["text_popup"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
@@ -24,16 +37,16 @@ M.CallbackTypes = {
 		Ui.popup(job, lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
 	end,
 	["replace_lines"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
-		lines = Utils.strip_reasoning(lines, "<think>", "</think>")
-		lines = Utils.trim_to_code_block(lines)
-		lines = Utils.remove_trailing_whitespace(lines)
-		Utils.fix_indentation(bufnr, start_row, end_row, lines)
-		if vim.api.nvim_buf_is_valid(bufnr) == true then
-			Utils.replace_lines(lines, bufnr, start_row, start_col, end_row, end_col)
-		else
-			-- if the buffer is not valid, open a popup. This can happen when the user closes the previous popup window before the request is finished.
-			Ui.popup(job, lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
-		end
+		lines = replacement(lines, bufnr, start_row, start_col, end_row, end_col)
+		Utils.replace_lines(lines, bufnr, start_row, start_col, end_row, end_col)
+	end,
+	["insert_lines"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
+		lines = replacement(lines, bufnr, start_row, start_col, end_row, end_col)
+		Utils.insert_lines(lines)
+	end,
+	["prepend_lines"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
+		lines = replacement(lines, bufnr, start_row, start_col, end_row, end_col)
+		Utils.prepend_lines(lines)
 	end,
 	["custom"] = nil,
 }
