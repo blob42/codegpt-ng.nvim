@@ -49,7 +49,9 @@ function Api.run_started_hook()
 end
 
 function Api.run_finished_hook()
-	CODEGPT_CALLBACK_COUNTER = CODEGPT_CALLBACK_COUNTER - 1
+	if CODEGPT_CALLBACK_COUNTER > 0 then
+		CODEGPT_CALLBACK_COUNTER = CODEGPT_CALLBACK_COUNTER - 1
+	end
 	if CODEGPT_CALLBACK_COUNTER <= 0 then
 		if Config.opts.hooks.request_finished ~= nil then
 			Config.opts.hooks.request_finished()
