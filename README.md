@@ -2,7 +2,7 @@
 
 **codegpt-ng** is a minimalist plugin for neovim that provides commands to interact with AI backends. The focus is around code related usages. So code completion, refactorings, generating docs, etc.
 
-This is a fork of the original **CodeGPT** repository from github user @dpayne.
+This is a fork of the original **CodeGPT** repository from github user **@dpayne**.
 All credit goes to him for the initial work.
 
 This fork does the following:
@@ -109,18 +109,26 @@ use({
 
 The top-level command is `:Chat`. The behavior is different depending on whether text is selected and/or arguments are passed.
 
-
 ### Completion
-* `:Chat` with text selection will trigger the `completion` command, ChatGPT will try to complete the selected code snippet.
 
-![completion](examples/completion.gif?raw=true)
+* `:Chat` with text selection will trigger the `completion` command, ChatGPT will try to complete the selected code snippet.
+<div align="center">
+  <p>
+    <video controls muted src="https://github.com/user-attachments/assets/1c26404e-5c3b-4729-ba03-83454c53de91"></video>
+  </p>
+</div>
 
 ### Code Edit
+
 * `:Chat some instructions` with text selection and command args will invoke the `code_edit` command.
 
-![code_edit](examples/code_edit.gif?raw=true)
+<div align="center">
+  <p>
+    <video controls muted src="https://github.com/user-attachments/assets/e6eee3b7-2725-4a57-840e-e410a7446e75"></video>
+  </p>
+</div>
 
-### Code Edit
+### Code Commands
 * `:Chat <command>` if there is only one argument and that argument matches a command, it will invoke that command with the given text selection. In the below example `:Chat tests` will attempt to write units for the selected code.
 
 ![tests](examples/tests.gif?raw=true)
@@ -252,9 +260,11 @@ The `system_message_template` and `user_message_template` can contain template m
 
 | name      | Description |
 |--------------|----------|
-| replace_lines | replaces the current lines with the response. If no text is selected it will insert the response at the cursor. |
-| text_popup | Will display the result in a text popup window. |
-| code_popup | Will display the results in a popup window with the filetype set to the filetype of the current buffer |
+| text_popup   | Will display the result in a text popup window. |
+| code_popup   | Will display the results in a popup window with the filetype set to the filetype of the current buffer. |
+| replace_lines | Replaces the current lines with the response. If no text is selected, it will insert the response at the cursor. |
+| insert_lines  | Inserts the response after the current cursor line without replacing any existing text. |
+| prepend_lines | Inserts the response before the current lines. If no text is selected, it will insert the response at the beginning of the buffer. |
 
 ## Example Configuration
 
@@ -287,6 +297,7 @@ popups
       quit = "q",                           -- Quit key
       use_as_output = "<c-o>",              -- Use as output key
       use_as_input = "<c-i>",               -- Use as input key
+      cancel = "<c-c>", 		    -- cancel current request
       custom = nil,                         -- table. with custom actions
     },
   },
