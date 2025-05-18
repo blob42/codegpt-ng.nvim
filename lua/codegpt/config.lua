@@ -150,6 +150,7 @@ M.persistent_override = nil
 ---@field callback_type? codegpt.CallbackType Controls what the plugin does with the response
 ---@field extra_params? table Custom parameters to include with this model query
 ---@field append_string? string String to append to prompt -- ex: /no_think
+---@field from? string (optional) Name of parent model to inherit params from
 
 ---@alias ModelDef { [string] : codegpt.Model | string }
 

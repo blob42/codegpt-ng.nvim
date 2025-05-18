@@ -164,4 +164,58 @@ describe("models selection", function()
 		local name, model = models.get_model()
 		assert(name == "gpt4-o")
 	end)
+
+	it("should inherit a model definition", function()
+		codegpt.setup({
+			connection = {
+				api_provider = "openai",
+			},
+			models = {
+				openai = {
+					default = "fbar",
+					foo = {
+						temperature = 0.5,
+						max_tokens = 420,
+					},
+					foobar = {
+						alias = "fbar",
+						from = "foo",
+						temperature = 1,
+						append_string = "/no_think",
+					},
+					bar = {
+						from = "fbar",
+						temperature = 0,
+					},
+				},
+			},
+		})
+		local _, model = models.get_model()
+		assert(vim.deep_equal(model, {
+			temperature = 1,
+			alias = "fbar",
+			from = "foo",
+			max_tokens = 420,
+			append_string = "/no_think",
+		}))
+
+		local name, model = models.get_model_by_name("fbar")
+		assert(vim.deep_equal(model, {
+			temperature = 1,
+			alias = "fbar",
+			from = "foo",
+			max_tokens = 420,
+			append_string = "/no_think",
+		}))
+		assert(name == "foo")
+		local name, model = models.get_model_by_name("bar")
+		assert(vim.deep_equal(model, {
+			temperature = 0,
+			alias = "fbar",
+			from = "fbar",
+			max_tokens = 420,
+			append_string = "/no_think",
+		}))
+		assert(name == "foo")
+	end)
 end)
