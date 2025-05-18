@@ -3,7 +3,7 @@ local Render = require("codegpt.template_render")
 local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
-local Tokens = require("codegpt.tokens")
+local tokens = require("codegpt.tokens")
 local errors = require("codegpt.errors")
 
 local M = {}
@@ -30,7 +30,7 @@ local function generate_messages(command, cmd_opts, command_args, text_selection
 end
 
 local function get_max_tokens(max_tokens, prompt)
-	local total_length = Tokens.get_tokens(prompt)
+	local total_length = tokens.get_tokens(prompt)
 
 	if total_length >= max_tokens then
 		error("Total length of messages exceeds max_tokens: " .. total_length .. " > " .. max_tokens)
@@ -160,7 +160,7 @@ function M.make_call(payload, cb)
 	local url = Config.opts.connection.ollama_base_url:gsub("/$", "") .. "/api/chat"
 	local headers = M.make_headers()
 	Api.run_started_hook()
-	curl.post(url, {
+	Api.current_job = curl.post(url, {
 		body = payload_str,
 		headers = headers,
 		callback = function(response)
@@ -173,13 +173,13 @@ function M.make_call(payload, cb)
 end
 
 ---@param payload table payload sent to api
----@param stream_cb fun(data: table) callback to handle the resonse json stream
+---@param stream_cb fun(data: table, job: table) callback to handle the resonse json stream
 function M.make_stream_call(payload, stream_cb)
 	local payload_str = vim.fn.json_encode(payload)
 	local url = Config.opts.connection.ollama_base_url:gsub("/$", "") .. "/api/chat"
 	local headers = M.make_headers()
 	Api.run_started_hook()
-	curl.post(url, {
+	Api.current_job = curl.post(url, {
 		body = payload_str,
 		headers = headers,
 		stream = function(error, data, job)

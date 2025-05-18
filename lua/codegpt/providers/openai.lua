@@ -3,7 +3,7 @@ local Render = require("codegpt.template_render")
 local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
-local Tokens = require("codegpt.tokens")
+local tokens = require("codegpt.tokens")
 local errors = require("codegpt.errors")
 
 -- TODO: handle streaming mode
@@ -32,7 +32,7 @@ local function generate_messages(command, cmd_opts, command_args, text_selection
 end
 
 local function get_max_tokens(max_tokens, messages)
-	local total_length = Tokens.get_tokens(messages)
+	local total_length = tokens.get_tokens(messages)
 
 	if total_length >= max_tokens then
 		error("Total length of messages exceeds max_tokens: " .. total_length .. " > " .. max_tokens)
@@ -151,7 +151,7 @@ function M.make_call(payload, cb)
 	local url = Config.opts.connection.chat_completions_url
 	local headers = M.make_headers()
 	Api.run_started_hook()
-	curl.post(url, {
+	Api.current_job = curl.post(url, {
 		body = payload_str,
 		headers = headers,
 		callback = function(response)

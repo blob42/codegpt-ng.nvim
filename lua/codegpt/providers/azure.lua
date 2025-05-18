@@ -198,7 +198,7 @@ function M.make_call(payload, cb)
 	local url = Config.opts.connection.chat_completions_url
 	local headers = M.make_headers()
 	Api.run_started_hook()
-	curl.post(url, {
+	Api.current_job = curl.post(url, {
 		body = payload_str,
 		headers = headers,
 		callback = function(response)

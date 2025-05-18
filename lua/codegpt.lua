@@ -1,5 +1,6 @@
-local config = require("codegpt.config")
-local models = require("codegpt.models")
+local Config = require("codegpt.config")
+local Models = require("codegpt.models")
+local Api = require("codegpt.api")
 local M = {}
 
 local Commands = require("codegpt.commands")
@@ -17,16 +18,16 @@ end
 
 function M.run_cmd(opts)
 	if opts.name and opts.name:match("^V") then
-		config.popup_override = "vertical"
+		Config.popup_override = "vertical"
 	else
-		config.popup_override = nil
+		Config.popup_override = nil
 	end
 
 	-- bang makes popup persistent until closed
 	if opts.bang then
-		config.persistent_override = true
+		Config.persistent_override = true
 	else
-		config.persistent_override = false
+		Config.persistent_override = false
 	end
 
 	local text_selection, bounds = Utils.get_selected_lines(opts)
@@ -46,7 +47,7 @@ function M.run_cmd(opts)
 			command_args = ""
 		elseif text_selection == "" then
 			command = "chat"
-		elseif config.opts.commands[command] == nil then
+		elseif Config.opts.commands[command] == nil then
 			command = "code_edit"
 		end
 	elseif text_selection ~= "" and command_args == "" then
@@ -63,7 +64,8 @@ function M.run_cmd(opts)
 	Commands.run_cmd(command, command_args, text_selection, bounds)
 end
 
-M.setup = config.setup
-M.select_model = models.select_model
+M.setup = Config.setup
+M.select_model = Models.select_model
+M.cancel_request = Api.cancel_job
 
 return M
