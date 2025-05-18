@@ -15,6 +15,7 @@ This fork does the following:
 - **UI Query and select** local or remote model
 - **Strips thinking tokens** from replies if the model forgets to use codeblocks
 - **New callback types**: `insert_lines` and `prepend_lines`
+- **Model definition inheritance**: Define models that inherit other model parameters
 - **Refactored for idiomatic Lua** and neovim plugin style
 - **Simplified command system** with explicit configuration
 - **Tests with plenary library**

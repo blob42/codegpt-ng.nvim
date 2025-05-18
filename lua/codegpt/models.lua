@@ -31,6 +31,15 @@ function M.get_model_by_name(name)
 		end
 	end
 
+	-- (optional) inherit a parent model
+	if result ~= nil and result.from ~= nil and #result.from > 0 then
+		local parent_name, parent = M.get_model_by_name(result.from)
+		if parent ~= nil then
+			result = vim.tbl_deep_extend("force", parent, result)
+			selected = parent_name
+		end
+	end
+
 	return selected, result
 end
 --- default model selection order from highest to lowest priority
@@ -71,6 +80,15 @@ function M.get_model()
 				selected = name
 				break
 			end
+		end
+	end
+
+	-- (optional) inherit a parent model
+	if result ~= nil and result.from ~= nil and #result.from > 0 then
+		local parent_name, parent = M.get_model_by_name(result.from)
+		if parent ~= nil then
+			result = vim.tbl_deep_extend("force", parent, result)
+			selected = parent_name
 		end
 	end
 
