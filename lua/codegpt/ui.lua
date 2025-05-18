@@ -1,6 +1,6 @@
 local Popup = require("nui.popup")
 local Split = require("nui.split")
-local config = require("codegpt.config")
+local Config = require("codegpt.config")
 local event = require("nui.utils.autocmd").event
 
 local M = {}
@@ -14,7 +14,7 @@ local function create_horizontal()
 		split = Split({
 			relative = "editor",
 			position = "bottom",
-			size = config.opts.ui.horizontal_popup_size,
+			size = Config.opts.ui.horizontal_popup_size,
 		})
 	end
 
@@ -26,7 +26,7 @@ local function create_vertical()
 		split = Split({
 			relative = "editor",
 			position = "right",
-			size = config.opts.ui.vertical_popup_size,
+			size = Config.opts.ui.vertical_popup_size,
 		})
 	end
 
@@ -35,7 +35,7 @@ end
 
 local function create_floating()
 	if not popup then
-		local window_options = config.opts.ui.popup_window_options
+		local window_options = Config.opts.ui.popup_window_options
 		if window_options == nil then
 			window_options = {}
 		end
@@ -43,7 +43,7 @@ local function create_floating()
 		local popupOpts = {
 			enter = true,
 			focusable = true,
-			border = config.opts.ui.popup_border,
+			border = Config.opts.ui.popup_border,
 			position = "50%",
 			size = {
 				width = "80%",
@@ -58,13 +58,13 @@ local function create_floating()
 		popup = Popup(popupOpts)
 	end
 
-	popup:update_layout(config.opts.ui.popup_options)
+	popup:update_layout(Config.opts.ui.popup_options)
 
 	return popup
 end
 
 local function create_window()
-	local popup_type = config.popup_override or config.opts.ui.popup_type
+	local popup_type = Config.popup_override or Config.opts.ui.popup_type
 	local ui_elem = nil
 	if popup_type == "horizontal" then
 		ui_elem = create_horizontal()
@@ -78,11 +78,14 @@ local function create_window()
 end
 
 function M.popup(job, lines, filetype, bufnr, start_row, start_col, end_row, end_col)
+	if job ~= nil and job.is_shutdown then
+		return
+	end
 	local ui_elem = create_window()
 	-- mount/open the component
 	ui_elem:mount()
 
-	if not (config.persistent_override or config.opts.ui.persistent) then
+	if not (Config.persistent_override or Config.opts.ui.persistent) then
 		-- unmount component when cursor leaves buffer
 		ui_elem:on(event.BufLeave, function()
 			ui_elem:unmount()
@@ -90,12 +93,12 @@ function M.popup(job, lines, filetype, bufnr, start_row, start_col, end_row, end
 	end
 
 	-- unmount component when key 'q'
-	ui_elem:map("n", config.opts.ui.actions.quit, function()
+	ui_elem:map("n", Config.opts.ui.actions.quit, function()
 		ui_elem:unmount()
 	end, { noremap = true, silent = true })
 	--
 	-- cancel job if actions.cancel is called
-	ui_elem:map("n", config.opts.ui.actions.cancel, function()
+	ui_elem:map("n", Config.opts.ui.actions.cancel, function()
 		job:shutdown()
 	end, { noremap = true, silent = true })
 
@@ -104,19 +107,19 @@ function M.popup(job, lines, filetype, bufnr, start_row, start_col, end_row, end
 	vim.api.nvim_buf_set_lines(ui_elem.bufnr, 0, 1, false, lines)
 
 	-- replace lines when ctrl-o pressed
-	ui_elem:map("n", config.opts.ui.actions.use_as_output, function()
+	ui_elem:map("n", Config.opts.ui.actions.use_as_output, function()
 		vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
 		ui_elem:unmount()
 	end)
 
 	-- selecting all the content when ctrl-i is pressed
 	-- so the user can proceed with another API request
-	ui_elem:map("n", config.opts.ui.actions.use_as_input, function()
+	ui_elem:map("n", Config.opts.ui.actions.use_as_input, function()
 		vim.api.nvim_feedkeys("ggVG:Chat ", "n", false)
 	end, { noremap = false })
 
 	-- mapping custom commands
-	for _, command in ipairs(config.opts.ui.actions.custom) do
+	for _, command in ipairs(Config.opts.ui.actions.custom) do
 		ui_elem:map(command[1], command[2], command[3], command[4])
 	end
 end
@@ -125,6 +128,9 @@ local streaming = false
 local stream_ui_elem = nil
 
 function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_row, end_col)
+	if job ~= nil and job.is_shutdown then
+		return
+	end
 	if not streaming then
 		streaming = true
 		stream_ui_elem = create_window()
@@ -132,7 +138,7 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 		-- mount/open the component
 		stream_ui_elem:mount()
 
-		if not (config.persistent_override or config.opts.ui.persistent) then
+		if not (Config.persistent_override or Config.opts.ui.persistent) then
 			-- unmount component when cursor leaves buffer
 			stream_ui_elem:on(event.BufLeave, function()
 				stream_ui_elem:unmount()
@@ -140,12 +146,12 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 		end
 
 		-- unmount component when key 'q'
-		stream_ui_elem:map("n", config.opts.ui.actions.quit, function()
+		stream_ui_elem:map("n", Config.opts.ui.actions.quit, function()
 			stream_ui_elem:unmount()
 		end, { noremap = true, silent = true })
 
 		-- cancel job if actions.cancel is called
-		stream_ui_elem:map("n", config.opts.ui.actions.cancel, function()
+		stream_ui_elem:map("n", Config.opts.ui.actions.cancel, function()
 			job:shutdown()
 		end, { noremap = true, silent = true })
 

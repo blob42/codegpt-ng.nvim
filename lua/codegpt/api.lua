@@ -1,8 +1,9 @@
 local Config = require("codegpt.config")
 
-local Api = {}
+local M = {}
 
-CODEGPT_CALLBACK_COUNTER = 0
+local CODEGPT_CALLBACK_COUNTER = 0
+M.current_job = nil
 
 local status_index = 0
 local timer = vim.uv.new_timer()
@@ -18,7 +19,7 @@ local function start_spinner_timer()
 	)
 end
 
-function Api.get_status(...)
+function M.get_status(...)
 	local spinners = Config.opts.ui.spinners or { "", "", "", "", "", "" }
 	local spinner_speed = Config.opts.ui.spinner_speed or 80
 	local ms = vim.uv.hrtime() / 1000000
@@ -40,7 +41,7 @@ function Api.get_status(...)
 	end
 end
 
-function Api.run_started_hook()
+function M.run_started_hook()
 	if Config.opts.hooks.request_started ~= nil then
 		Config.opts.hooks.request_started()
 	end
@@ -48,7 +49,7 @@ function Api.run_started_hook()
 	CODEGPT_CALLBACK_COUNTER = CODEGPT_CALLBACK_COUNTER + 1
 end
 
-function Api.run_finished_hook()
+function M.run_finished_hook()
 	if CODEGPT_CALLBACK_COUNTER > 0 then
 		CODEGPT_CALLBACK_COUNTER = CODEGPT_CALLBACK_COUNTER - 1
 	end
@@ -59,4 +60,11 @@ function Api.run_finished_hook()
 	end
 end
 
-return Api
+function M.cancel_job()
+	if M.current_job ~= nil then
+		M.current_job:shutdown()
+		M.run_finished_hook()
+	end
+end
+
+return M
