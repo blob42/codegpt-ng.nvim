@@ -12,6 +12,7 @@ function M.get_filetype()
 	return vim.api.nvim_get_option_value("filetype", { buf = bufnr })
 end
 
+---@return Range4 range
 function M.get_visual_selection()
 	local bufnr = vim.api.nvim_get_current_buf()
 
@@ -30,7 +31,7 @@ function M.get_visual_selection()
 	end
 
 	if start_pos[1] == end_pos[1] and start_pos[2] == end_pos[2] then
-		return 0, 0, 0, 0
+		return { 0, 0, 0, 0 }
 	end
 
 	local start_row = start_pos[1] - 1
@@ -40,7 +41,7 @@ function M.get_visual_selection()
 	local end_col = end_pos[2] + 1
 
 	if vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, true)[1] == nil then
-		return 0, 0, 0, 0
+		return { 0, 0, 0, 0 }
 	end
 
 	local start_line_length = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, true)[1]:len()
@@ -49,33 +50,35 @@ function M.get_visual_selection()
 	local end_line_length = vim.api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, true)[1]:len()
 	end_col = math.min(end_col, end_line_length)
 
-	return start_row, start_col, end_row, end_col
+	return { start_row, start_col, end_row, end_col }
 end
 
 ---@alias bounding_box [number,number,number,number]
 
 ---@param opts table options passed by nvim_create_user_command to the callback
 ---@return string text selected text string
----@return bounding_box bounds text bounding box
+---@return Range4 range text range
 function M.get_selected_lines(opts)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local start_row, start_col, end_row, end_col
 	if (opts.line2 - opts.line1 + 1) == vim.api.nvim_buf_line_count(bufnr) then
 		start_row, start_col, end_row, end_col = 0, 0, -1, -1
 	else
-		start_row, start_col, end_row, end_col = M.get_visual_selection()
+		start_row, start_col, end_row, end_col = unpack(M.get_visual_selection())
 	end
 
 	local lines = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
 	return table.concat(lines, "\n"), { start_row, start_col, end_row, end_col }
 end
 
+---@param lines string[]
 function M.prepend_lines(lines)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local line = vim.api.nvim_win_get_cursor(0)[1]
 	vim.api.nvim_buf_set_lines(bufnr, line - 1, line - 1, false, lines)
 end
 
+---@param lines string[]
 function M.insert_lines(lines)
 	local bufnr = vim.api.nvim_get_current_buf()
 	local line = vim.api.nvim_win_get_cursor(0)[1]
@@ -83,10 +86,17 @@ function M.insert_lines(lines)
 	vim.api.nvim_win_set_cursor(0, { line + #lines, 0 })
 end
 
-function M.replace_lines(lines, bufnr, start_row, start_col, end_row, end_col)
+---@param lines string[]
+---@param bufnr integer
+---@param range Range4
+function M.replace_lines(lines, bufnr, range)
+	local start_row, start_col, end_row, end_col = unpack(range)
 	vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
 end
 
+---@param lines string[]
+---@param start_token string
+---@param stop_token string
 function M.strip_reasoning(lines, start_token, stop_token)
 	local stripped = {}
 	local in_think = false
@@ -107,10 +117,11 @@ function M.strip_reasoning(lines, start_token, stop_token)
 	return stripped
 end
 
-local function get_code_block(lines2)
+---@param lines string[]
+local function get_code_block(lines)
 	local code_block = {}
 	local in_code_block = false
-	for _, line in ipairs(lines2) do
+	for _, line in ipairs(lines) do
 		if line:match("^```") then
 			in_code_block = not in_code_block
 		elseif in_code_block then
@@ -120,8 +131,9 @@ local function get_code_block(lines2)
 	return code_block
 end
 
-local function contains_code_block(lines2)
-	for _, line in ipairs(lines2) do
+---@param lines string[]
+local function contains_code_block(lines)
+	for _, line in ipairs(lines) do
 		if line:match("^```") then
 			return true
 		end
@@ -129,6 +141,7 @@ local function contains_code_block(lines2)
 	return false
 end
 
+---@param lines string[]
 function M.trim_to_code_block(lines)
 	if contains_code_block(lines) then
 		return get_code_block(lines)
@@ -136,6 +149,7 @@ function M.trim_to_code_block(lines)
 	return lines
 end
 
+---@param response_text string
 function M.parse_lines(response_text)
 	if config.opts.write_response_to_err_log then
 		error("ChatGPT response: \n" .. response_text .. "\n")
@@ -144,6 +158,10 @@ function M.parse_lines(response_text)
 	return vim.fn.split(vim.trim(response_text), "\n")
 end
 
+---@param bufnr integer
+---@param start_row integer
+---@param end_row integer
+---@param new_lines string[]
 function M.fix_indentation(bufnr, start_row, end_row, new_lines)
 	local original_lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row, true)
 	local min_indentation = math.huge
@@ -164,6 +182,7 @@ function M.fix_indentation(bufnr, start_row, end_row, new_lines)
 	end
 end
 
+---@param lines string[]
 function M.remove_trailing_whitespace(lines)
 	for i, line in ipairs(lines) do
 		lines[i] = line:gsub("%s+$", "")
@@ -171,6 +190,8 @@ function M.remove_trailing_whitespace(lines)
 	return lines
 end
 
+---@param max_context_length integer
+---@param messages table[]
 function M.fail_if_exceed_context_window(max_context_length, messages)
 	local ok, total_length = M.get_accurate_tokens(vim.fn.json_encode(messages))
 

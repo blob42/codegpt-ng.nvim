@@ -16,6 +16,7 @@ function M.get_status(...)
 	return Commands.get_status(...)
 end
 
+---@param opts vim.api.keyset.create_user_command.command_args
 function M.run_cmd(opts)
 	if opts.name and opts.name:match("^V") then
 		Config.popup_override = "vertical"
@@ -30,7 +31,7 @@ function M.run_cmd(opts)
 		Config.persistent_override = false
 	end
 
-	local text_selection, bounds = Utils.get_selected_lines(opts)
+	local text_selection, range = Utils.get_selected_lines(opts)
 	local command_args = table.concat(opts.fargs, " ")
 
 	local command = opts.fargs[1]
@@ -61,7 +62,7 @@ function M.run_cmd(opts)
 		return
 	end
 
-	Commands.run_cmd(command, command_args, text_selection, bounds)
+	Commands.run_cmd(command, command_args, text_selection, range)
 end
 
 M.setup = Config.setup

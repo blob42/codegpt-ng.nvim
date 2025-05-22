@@ -8,7 +8,9 @@ local errors = require("codegpt.errors")
 
 local M = {}
 
+---@param command string
 ---@param cmd_opts codegpt.CommandOpts
+---@param command_args string[]
 local function generate_messages(command, cmd_opts, command_args, text_selection)
 	local system_message =
 		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
