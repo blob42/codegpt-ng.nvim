@@ -3,8 +3,6 @@ local Providers = require("codegpt.providers")
 local M = {}
 
 function M.get_model_by_name(name)
-	---@type codegpt.Model
-
 	local provider_name = vim.fn.tolower(Config.opts.connection.api_provider)
 	local provider_config = Config.opts.models[provider_name]
 

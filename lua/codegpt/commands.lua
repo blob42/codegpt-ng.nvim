@@ -1,3 +1,5 @@
+---@module 'plenary.curl'
+
 local Utils = require("codegpt.utils")
 local Ui = require("codegpt.ui")
 local Providers = require("codegpt.providers")
@@ -7,19 +9,28 @@ local models = require("codegpt.models")
 
 local M = {}
 
-local text_popup_stream = function(job, stream, bufnr, start_row, start_col, end_row, end_col)
+---@param job Job
+---@param stream string
+---@param bufnr integer
+---@param range Range4
+local text_popup_stream = function(job, stream, bufnr, range)
 	local popup_filetype = Config.opts.ui.text_popup_filetype
-	Ui.popup_stream(job, stream, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
+	Ui.popup_stream(job, stream, popup_filetype, bufnr, range)
 end
 
-local function replacement(lines, bufnr, start_row, start_col, end_row, end_col)
+---@param job Job
+---@param lines string[]
+---@param bufnr integer
+---@param range Range4
+local function replacement(job, lines, bufnr, range)
+	local start_row, _, end_row, _ = unpack(range)
 	lines = Utils.strip_reasoning(lines, "<think>", "</think>")
 	lines = Utils.trim_to_code_block(lines)
 	lines = Utils.remove_trailing_whitespace(lines)
 	Utils.fix_indentation(bufnr, start_row, end_row, lines)
 	-- if the buffer is not valid, open a popup. This can happen when the user closes the previous popup window before the request is finished.
 	if vim.api.nvim_buf_is_valid(bufnr) ~= true then
-		Ui.popup(job, lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
+		Ui.popup(job, lines, Utils.get_filetype(), bufnr, range)
 	else
 		return lines
 	end
@@ -27,25 +38,26 @@ end
 
 M.CallbackTypes = {
 	["text_popup_stream"] = text_popup_stream,
-	["text_popup"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
+	["text_popup"] = function(job, lines, bufnr, range)
 		local popup_filetype = Config.opts.ui.text_popup_filetype
-		Ui.popup(job, lines, popup_filetype, bufnr, start_row, start_col, end_row, end_col)
+		Ui.popup(job, lines, popup_filetype, bufnr, range)
 	end,
-	["code_popup"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
+	["code_popup"] = function(job, lines, bufnr, range)
+		local start_row, _, end_row, _ = unpack(range)
 		lines = Utils.trim_to_code_block(lines)
 		Utils.fix_indentation(bufnr, start_row, end_row, lines)
-		Ui.popup(job, lines, Utils.get_filetype(), bufnr, start_row, start_col, end_row, end_col)
+		Ui.popup(job, lines, Utils.get_filetype(), bufnr, range)
 	end,
-	["replace_lines"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
-		lines = replacement(lines, bufnr, start_row, start_col, end_row, end_col)
-		Utils.replace_lines(lines, bufnr, start_row, start_col, end_row, end_col)
+	["replace_lines"] = function(job, lines, bufnr, range)
+		lines = replacement(job, lines, bufnr, range)
+		Utils.replace_lines(lines, bufnr, range)
 	end,
-	["insert_lines"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
-		lines = replacement(lines, bufnr, start_row, start_col, end_row, end_col)
+	["insert_lines"] = function(job, lines, bufnr, range)
+		lines = replacement(job, lines, bufnr, range)
 		Utils.insert_lines(lines)
 	end,
-	["prepend_lines"] = function(job, lines, bufnr, start_row, start_col, end_row, end_col)
-		lines = replacement(lines, bufnr, start_row, start_col, end_row, end_col)
+	["prepend_lines"] = function(job, lines, bufnr, range)
+		lines = replacement(job, lines, bufnr, range)
 		Utils.prepend_lines(lines)
 	end,
 	["custom"] = nil,
@@ -94,8 +106,8 @@ end
 ---@param command string
 ---@param command_args string
 ---@param text_selection string
----@param bounds bounding_box
-function M.run_cmd(command, command_args, text_selection, bounds)
+---@param range Range4
+function M.run_cmd(command, command_args, text_selection, range)
 	local provider = Providers.get_provider()
 	local cmd_opts, is_stream = get_cmd_opts(command)
 	if cmd_opts == nil then
@@ -110,11 +122,11 @@ function M.run_cmd(command, command_args, text_selection, bounds)
 
 	if is_stream then
 		new_callback = function(stream, job)
-			cmd_opts.callback(job, stream, bufnr, unpack(bounds))
+			cmd_opts.callback(job, stream, bufnr, range)
 		end
 	else
 		new_callback = function(lines, job) -- called from Provider.handle_response
-			cmd_opts.callback(job, lines, bufnr, unpack(bounds))
+			cmd_opts.callback(job, lines, bufnr, range)
 		end
 	end
 
@@ -126,6 +138,7 @@ function M.run_cmd(command, command_args, text_selection, bounds)
 	end
 end
 
+---@return string
 function M.get_status(...)
 	return Api.get_status(...)
 end

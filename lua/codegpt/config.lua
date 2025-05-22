@@ -10,6 +10,7 @@ local M = {}
 ---@field max_tokens? number Custom max_tokens for this command
 ---@field append_string? string String to append to prompt -- ex: /no_think
 ---@field model? string Model to always use with this command
+---@field [string] any -- merged command parameters
 
 ---@type { [string]: codegpt.CommandOpts }
 local default_commands = {
@@ -133,7 +134,7 @@ M.persistent_override = nil
 ---@field popup_options? table nui.nvim popup options
 ---@field persistent? boolean Do not close popup window on mouse leave. Useful with vertical and horizontal layouts.
 ---@field actions? table | {custom?: table} -- ui key mappings
----@field text_popup_filetype? string Set the filetype of the text popup
+---@field text_popup_filetype string Set the filetype of the text popup
 ---@field popup_type? "popup" | "vertical" | "horizontal" Set the type of ui to use for the popup
 ---@field horizontal_popup_size? string Set the height of the horizontal popup
 ---@field vertical_popup_size? string Set the width of the vertical popup

@@ -1,3 +1,5 @@
+---@module 'plenary.job'
+
 local Popup = require("nui.popup")
 local Split = require("nui.split")
 local Config = require("codegpt.config")
@@ -77,7 +79,12 @@ local function create_window()
 	return ui_elem
 end
 
-function M.popup(job, lines, filetype, bufnr, start_row, start_col, end_row, end_col)
+---@param job Job
+---@param lines string[]
+---@param filetype string
+---@param range Range4
+function M.popup(job, lines, filetype, bufnr, range)
+	local start_row, start_col, end_row, end_col = unpack(range)
 	if job ~= nil and job.is_shutdown then
 		return
 	end

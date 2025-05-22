@@ -19,6 +19,7 @@ local function start_spinner_timer()
 	)
 end
 
+---@return string
 function M.get_status(...)
 	local spinners = Config.opts.ui.spinners or { "", "", "", "", "", "" }
 	local spinner_speed = Config.opts.ui.spinner_speed or 80
