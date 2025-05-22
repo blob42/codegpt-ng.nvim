@@ -2,14 +2,23 @@ local Utils = require("codegpt.utils")
 
 local Render = {}
 
----TODO!: add lang->vim_filety pemappings for other common languages
 local function get_language()
 	local filetype = Utils.get_filetype()
-	if filetype == "cpp" then
-		return "C++"
-	else
-		return filetype
-	end
+	local lang_map = {
+		cpp = "C++",
+		py = "Python",
+		js = "JavaScript",
+		ts = "TypeScript",
+		rb = "Ruby",
+		go = "Go",
+		rs = "Rust",
+		sh = "Bash",
+		tsx = "TypeScript",
+		vue = "Vue.js",
+		md = "Markdown",
+		-- add more language mappings here
+	}
+	return lang_map[filetype] or filetype
 end
 
 local function safe_replace(template, key, value)
