@@ -134,11 +134,14 @@ end
 local streaming = false
 local stream_ui_elem = nil
 
+---@param job Job
 function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_row, end_col)
 	if job ~= nil and job.is_shutdown then
+		streaming = false
 		return
 	end
 	if not streaming then
+		buffer = ""
 		streaming = true
 		stream_ui_elem = create_window()
 
@@ -148,18 +151,23 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 		if not (Config.persistent_override or Config.opts.ui.persistent) then
 			-- unmount component when cursor leaves buffer
 			stream_ui_elem:on(event.BufLeave, function()
+				job:shutdown()
+				streaming = false
 				stream_ui_elem:unmount()
 			end)
 		end
 
 		-- unmount component when key 'q'
 		stream_ui_elem:map("n", Config.opts.ui.actions.quit, function()
+			job:shutdown()
+			streaming = false
 			stream_ui_elem:unmount()
 		end, { noremap = true, silent = true })
 
 		-- cancel job if actions.cancel is called
 		stream_ui_elem:map("n", Config.opts.ui.actions.cancel, function()
 			job:shutdown()
+			streaming = false
 		end, { noremap = true, silent = true })
 
 		vim.api.nvim_set_option_value("filetype", filetype, { buf = stream_ui_elem.bufnr })

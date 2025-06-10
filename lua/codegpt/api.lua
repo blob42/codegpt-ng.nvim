@@ -3,6 +3,7 @@ local Config = require("codegpt.config")
 local M = {}
 
 local CODEGPT_CALLBACK_COUNTER = 0
+---@type Job
 M.current_job = nil
 
 local status_index = 0
