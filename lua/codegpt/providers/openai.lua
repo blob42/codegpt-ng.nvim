@@ -1,35 +1,14 @@
 local curl = require("plenary.curl")
-local Render = require("codegpt.template_render")
 local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
 local tokens = require("codegpt.tokens")
 local errors = require("codegpt.errors")
+local Messages = require("codegpt.providers.messages")
 
 -- TODO: handle streaming mode
 
 local M = {}
-
----@param cmd_opts codegpt.CommandOpts
-local function generate_messages(command, cmd_opts, command_args, text_selection)
-	local system_message =
-		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
-	local user_message = Render.render(command, cmd_opts.user_message_template, command_args, text_selection, cmd_opts)
-	if cmd_opts.append_string then
-		user_message = user_message .. " " .. cmd_opts.append_string
-	end
-
-	local messages = {}
-	if system_message ~= nil and system_message ~= "" then
-		table.insert(messages, { role = "system", content = system_message })
-	end
-
-	if user_message ~= nil and user_message ~= "" then
-		table.insert(messages, { role = "user", content = user_message })
-	end
-
-	return messages
-end
 
 local function get_max_tokens(max_tokens, messages)
 	local total_length = tokens.get_tokens(messages)
@@ -48,7 +27,7 @@ end
 ---@param is_stream? boolean
 function M.make_request(command, cmd_opts, command_args, text_selection, is_stream)
 	local models = require("codegpt.models")
-	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
+	local messages = Messages.generate_messages(command, cmd_opts, command_args, text_selection)
 
 	local max_tokens = cmd_opts.max_tokens
 	if cmd_opts.max_output_tokens ~= nil then

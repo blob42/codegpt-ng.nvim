@@ -1,28 +1,11 @@
 local curl = require("plenary.curl")
-local Render = require("codegpt.template_render")
 local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
 local errors = require("codegpt.errors")
+local Messages = require("codegpt.providers.messages")
 
 local M = {}
-
-local function generate_messages(command, cmd_opts, command_args, text_selection)
-	local system_message =
-		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
-	local user_message = Render.render(command, cmd_opts.user_message_template, command_args, text_selection, cmd_opts)
-
-	local messages = {}
-	if system_message ~= nil and system_message ~= "" then
-		table.insert(messages, { role = "system", content = system_message })
-	end
-
-	if user_message ~= nil and user_message ~= "" then
-		table.insert(messages, { role = "user", content = user_message })
-	end
-
-	return messages
-end
 
 local function get_max_tokens(max_tokens, messages)
 	local ok, total_length = Utils.get_accurate_tokens(vim.fn.json_encode(messages))
@@ -42,7 +25,7 @@ local function get_max_tokens(max_tokens, messages)
 end
 
 function M.make_request(command, cmd_opts, command_args, text_selection)
-	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
+	local messages = Messages.generate_messages(command, cmd_opts, command_args, text_selection)
 
 	local max_tokens = cmd_opts.max_tokens
 	if cmd_opts.max_output_tokens ~= nil then

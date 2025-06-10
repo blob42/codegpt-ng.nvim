@@ -40,7 +40,7 @@ end
 
 ---@param cmd string
 ---@param template string
----@param command_args string[]
+---@param command_args string
 ---@param cmd_opts table
 function Render.render(cmd, template, command_args, text_selection, cmd_opts)
 	local language = get_language()
