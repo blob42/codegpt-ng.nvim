@@ -35,7 +35,7 @@ describe("command parsing: ", function()
 	end)
 end)
 
-describe("cmd opts", function()
+describe("command options", function()
 	before_each(function()
 		codegpt.setup()
 	end)

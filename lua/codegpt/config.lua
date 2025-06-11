@@ -1,6 +1,10 @@
 ---@class codegpt.Config
 local M = {}
 
+---@class codegpt.Chatmsg
+---@field role "system"|"user"|"assistant"
+---@field content string
+
 ---@class codegpt.CommandOpts
 ---@field user_message_template? string
 ---@field language_instructions? table<string, string> language instruction in the form lang = instruction
@@ -10,6 +14,7 @@ local M = {}
 ---@field max_tokens? number Custom max_tokens for this command
 ---@field append_string? string String to append to prompt -- ex: /no_think
 ---@field model? string Model to always use with this command
+---@field chat_history? codegpt.Chatmsg[]
 ---@field [string] any -- merged command parameters
 
 ---@type { [string]: codegpt.CommandOpts }
