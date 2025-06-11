@@ -3,11 +3,6 @@ local config = require("codegpt.config")
 local Messages = require("codegpt.providers.messages")
 local Commands = require("codegpt.commands")
 
-local function should_fail(fun)
-	local stat = pcall(fun)
-	assert(not stat, "Function should have errored")
-end
-
 describe("message templates", function()
 	before_each(function()
 		codegpt.setup()

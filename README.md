@@ -18,6 +18,7 @@ This fork does the following:
 - **Model definition inheritance**: Define models that inherit other model parameters
 - **Refactored for idiomatic Lua** and neovim plugin style
 - **Simplified command system** with explicit configuration
+- **Chat History**: Add example messages in a command definition
 - **Tests with plenary library**
 - **Fixed statusline** integration
 
@@ -362,3 +363,10 @@ popups
 })
 
 ```
+
+## API
+
+`setup({config})`: setup plugin
+`select_model()`: list local defined and remote available models 
+`cancel_request()`: Cancel ongoing request
+
