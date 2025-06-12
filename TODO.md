@@ -1,8 +1,8 @@
 ## High
-- [ ] cancel current request
 - [ ] implement streaming for OpenAI APIs. 
 - [ ] list/select with telescope picker
-- [ ] model definition inheritance: define model from previous one
+- [x] model definition inheritance: define model from previous one
+- [x] cancel current request
 
 ## Medium
 - [ ] ui 

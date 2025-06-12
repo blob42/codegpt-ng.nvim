@@ -100,12 +100,12 @@ function M.popup(job, lines, filetype, bufnr, range)
 	end
 
 	-- unmount component when key 'q'
-	ui_elem:map("n", Config.opts.ui.actions.quit, function()
+	ui_elem:map("n", Config.opts.ui.mappings.quit, function()
 		ui_elem:unmount()
 	end, { noremap = true, silent = true })
 	--
 	-- cancel job if actions.cancel is called
-	ui_elem:map("n", Config.opts.ui.actions.cancel, function()
+	ui_elem:map("n", Config.opts.ui.mappings.cancel, function()
 		job:shutdown()
 	end, { noremap = true, silent = true })
 
@@ -114,19 +114,19 @@ function M.popup(job, lines, filetype, bufnr, range)
 	vim.api.nvim_buf_set_lines(ui_elem.bufnr, 0, 1, false, lines)
 
 	-- replace lines when ctrl-o pressed
-	ui_elem:map("n", Config.opts.ui.actions.use_as_output, function()
+	ui_elem:map("n", Config.opts.ui.mappings.use_as_output, function()
 		vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
 		ui_elem:unmount()
 	end)
 
 	-- selecting all the content when ctrl-i is pressed
 	-- so the user can proceed with another API request
-	ui_elem:map("n", Config.opts.ui.actions.use_as_input, function()
+	ui_elem:map("n", Config.opts.ui.mappings.use_as_input, function()
 		vim.api.nvim_feedkeys("ggVG:Chat ", "n", false)
 	end, { noremap = false })
 
 	-- mapping custom commands
-	for _, command in ipairs(Config.opts.ui.actions.custom) do
+	for _, command in ipairs(Config.opts.ui.mappings.custom) do
 		ui_elem:map(command[1], command[2], command[3], command[4])
 	end
 end
@@ -158,14 +158,14 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 		end
 
 		-- unmount component when key 'q'
-		stream_ui_elem:map("n", Config.opts.ui.actions.quit, function()
+		stream_ui_elem:map("n", Config.opts.ui.mappings.quit, function()
 			job:shutdown()
 			streaming = false
 			stream_ui_elem:unmount()
 		end, { noremap = true, silent = true })
 
 		-- cancel job if actions.cancel is called
-		stream_ui_elem:map("n", Config.opts.ui.actions.cancel, function()
+		stream_ui_elem:map("n", Config.opts.ui.mappings.cancel, function()
 			job:shutdown()
 			streaming = false
 		end, { noremap = true, silent = true })

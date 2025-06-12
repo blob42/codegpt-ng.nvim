@@ -41,51 +41,7 @@ Installing with Lazy.
     'MunifTanjim/nui.nvim',
   },
   opts = {
-    -- API configuration
-    api = {
-      provider = "openai",  -- or "ollama", "azure", etc.
-      openai_api_key = vim.fn.getenv "OPENAI_API_KEY",
-      chat_completions_url = "https://api.openai.com/v1/chat/completions",
-    },
-    
-    -- Command defaults
-    commands = {
-      completion = {
-        model = "gpt-3.5-turbo",
-        user_message_template = "This is a template...",
-        callback_type = "replace_lines",
-      },
-      tests = {
-        language_instructions = { java = "Use TestNG framework" },
-      },
-      -- Add custom commands here
-    },
-    
-    -- UI configuration
-    ui = {
-      popup_type = "popup",  -- or "horizontal", "vertical"
-      text_popup_filetype = "markdown",
-      commands = {
-        quit = "q",
-        use_as_output = "<c-o>",
-      },
-      popup_options = {
-        relative = "editor",
-        position = "50%",
-        size = { width = "80%", height = "80%" },
-      },
-      popup_border = { style = "rounded" },
-      popup_window_options = { wrap = true, number = true },
-    },
-    
-    -- Status hooks
-    hooks = {
-      request_started = function() vim.cmd("hi StatusLine ctermfg=yellow") end,
-      request_finished = function() vim.cmd("hi StatusLine ctermfg=NONE") end,
-    },
-    
-    -- Other options
-    clear_visual_selection = true,
+    -- configuration here
   }
 }
 ```
@@ -151,7 +107,7 @@ Here is the full list of predefined command actions:
 | command      | input | Description |
 |--------------|---- |------------------------------------|
 | completion |  text selection | Will ask ChatGPT to complete the selected code. |
-| code_edit  |  text selection and command args | Will ask ChatGPT to apply the given instructions (the command args) to the selected code. |
+| code_edit  |  text selection + command args | Will ask ChatGPT to apply the given instructions (the command args) to the selected code. |
 | explain  |  text selection | Will ask ChatGPT to explain the selected code. |
 | question  |  text selection | Will pass the commands args to ChatGPT and return the answer in a text popup. |
 | debug  |  text selection | Will pass the code selection to ChatGPT analyze it for bugs, the results will be in a text popup. |
@@ -223,7 +179,7 @@ commands = {
 ui = {
   popup_type = "popup",  -- or "horizontal", "vertical"
   text_popup_filetype = "markdown",
-  commands = {
+  mappings = {
     quit = "q",
     use_as_output = "<c-o>",
   },
@@ -271,7 +227,6 @@ The `system_message_template` and `user_message_template` can contain template m
 ## Example Configuration
 
 ```lua
-
 require("codegpt").setup({
   -- Connection settings for API providers
   connection = {
@@ -364,9 +319,25 @@ popups
 
 ```
 
-## API
+## External API
 
-`setup({config})`: setup plugin
-`select_model()`: list local defined and remote available models 
-`cancel_request()`: Cancel ongoing request
+- `setup({config})`: setup plugin
+- `select_model()`: list local defined and remote available models 
+- `cancel_request()`: Cancel ongoing request
+
+
+## License
+
+Copyright Chakib <blob42> Benziane 
+
+This project is licensed under the terms of the AGPL3 license.
+
+A copy of the license is distributed with the source code of this project.
+
+
+## Credit
+
+Darby Payne (@dpayne) <darby.payne@gmail.com> the original creator. 
+
+And all contributors
 
