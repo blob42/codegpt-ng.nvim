@@ -303,7 +303,7 @@ hooks = {
 
 You can use macros inside the user/system message templates when defining a command. 
 
-The `system_message_template` and `user_message_template` can contain template macros. For example:
+The `system_message_template` and `user_message_template` can contain the following macros:
 
 | macro | description |
 |------|-------------|
