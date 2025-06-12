@@ -201,11 +201,7 @@ function M.get_models()
 		error("Could not parse the response from " .. url .. "/v1/models")
 		return {}
 	end
-	-- print(vim.inspect(json))
-	local models = {}
-	for _, model in ipairs(json.models) do
-		table.insert(models, 0, model)
-	end
+	local models = vim.fn.extend({}, json.models)
 	return models
 end
 

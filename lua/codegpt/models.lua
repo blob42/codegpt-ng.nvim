@@ -161,7 +161,7 @@ function M.select_model()
 	-- get local defined models
 	local used_provider = vim.fn.tolower(Config.opts.connection.api_provider)
 	local local_models = M.get_local_models(used_provider)
-	models = vim.tbl_extend("force", models, local_models)
+	models = vim.fn.extend(models, local_models)
 
 	if models == nil then
 		error("listing models")
