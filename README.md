@@ -86,15 +86,47 @@ The top-level command is `:Chat`. The behavior is different depending on whether
   </p>
 </div>
 
-### Code Commands
-* `:Chat <command>` if there is only one argument and that argument matches a command, it will invoke that command with the given text selection. In the below example `:Chat tests` will attempt to write units for the selected code.
+### Code Commands 
 
-![tests](examples/tests.gif?raw=true)
+* `:Chat <command>`: if there is only one argument and that argument matches a command, it will invoke that command with the given text selection.
 
-### Chat
+In the below example `:Chat tests` will attempt to write units for the selected code.
+
+Here are a few example commands to illustrate it:
+
+#### Doc
+
+* `:Chat doc` generates documentation blocks and prepends it to the selected text.
+* Use `codegpt.select_model()` to quickly select different models with `vim.ui.select`
+
+<div align="center">
+  <video controls muted src="https://github.com/user-attachments/assets/c9fb8d6f-af29-4344-b464-be33042567bf"></video>
+</div>
+
+#### Tests
+
+<div align="center">
+  <video controls muted src="https://github.com/user-attachments/assets/b185184b-82ec-4e7f-9e59-39bb44e7e7fa"></video>
+</div>
+
+#### Question
+
+* Ask question about the selected text file. This demo also showcases using the `%` range modifier to use all the buffer as selection.
+
+<div align="center">
+  <video controls muted src="https://github.com/user-attachments/assets/3fe709ee-7014-43d4-b2be-232bf86621fb"></video>
+</div>
+
+### Chat Mode (Streaming)
+
 * `:Chat hello world` without any text selection will trigger the `chat` command.
+* Streaming can be toggled in the config
 
-![chat](examples/chat.gif?raw=true)
+Note: you have to input at least two words otherwise it would be considered as a codegpt command.
+
+<div align="center">
+  <video controls muted src="https://github.com/user-attachments/assets/119d5104-a772-44ab-b624-b6b52510ada2"></video>
+</div>
 
 #### Other available commands:
 
@@ -328,7 +360,7 @@ popups
 
 ## License
 
-Copyright Chakib <blob42> Benziane 
+Copyright (c) 2025 - Chakib Benziane <contact@blob42.xyz>
 
 This project is licensed under the terms of the AGPL3 license.
 
