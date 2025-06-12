@@ -26,6 +26,21 @@ Although this fork introduces breaking changes and a substantial rewrite, I've t
 
 In particular, the model definition flow was carefully designed to quickly add custom model profiles for specific cases and easily switch between them or assign them to custom commands.
 
+**[How Does It Compare To X](./doc/how-does-it-compare-to.md)**
+
+**[Demo](#commands)**
+
+**[Configuration](#configuration)**
+
+**[Command Definition](#configuration)**
+
+**[Model Specification](#model-specification)**
+
+**[Templates](#templates)**
+
+**[Example Config](#example-configuration)**
+
+
 
 ## Installation
 
@@ -175,7 +190,7 @@ require("codegpt").setup({
 })
 ```
 
-### Overriding Command Configurations
+### Overriding Command Definitions
 
 The configuration table `commands` can be used to override command configurations.
 
@@ -204,6 +219,56 @@ commands = {
   }
 }
 ```
+
+### Model Specification
+
+The `models` table defines available LLM models for each provider. Models are
+organized by provider type and can inherit parameters from other models.
+
+```lua
+  models = {
+    default = "gpt-3.5-turbo",              -- Global default model
+    ollama = {
+      default = "gemma3:1b",                -- Ollama default model
+      ['qwen3:4b'] = {
+        alias = "qwen3",                    -- Alias to call this model
+        max_tokens = 8192,
+        temperature = 0.8,
+        append_string = '/no_thinking', -- Custom string to append to the prompt
+      },
+    },
+    openai = {
+      ["gpt-3.5-turbo"] = {
+        alias = "gpt35",
+        max_tokens = 4096,
+        temperature = 0.8,
+      },
+    },
+  }
+```
+
+#### Inheritance
+
+Models can inherit parameters from other models using the `from` field. For example:
+```lua
+    ["gpt-foo"] = {
+      from = "gpt-3.5-turbo",  -- Inherit from openai's default
+      temperature = 0.7,       -- Override temperature
+    }
+```
+
+#### Aliases
+
+Use `alias` to create shorthand names for models.
+
+#### Override defaults
+
+Specify model parameters like `max_tokens`, `temperature`, and `append_string`
+to customize behavior. see `lua/codegpt/config.lua` file for the full config specification.
+
+#### Model Selection
+
+- Call `:lua codegpt.select_model()` to interactively choose a model via UI.
 
 ### UI Configuration
 
@@ -236,6 +301,8 @@ hooks = {
 
 ## Templates
 
+You can use macros inside the user/system message templates when defining a command. 
+
 The `system_message_template` and `user_message_template` can contain template macros. For example:
 
 | macro | description |
@@ -245,6 +312,39 @@ The `system_message_template` and `user_message_template` can contain template m
 | `{{language}}` | The name of the programming language in the current buffer. |
 | `{{command_args}}` | Everything passed to the command as an argument, joined with spaces. |
 | `{{language_instructions}}` | The found value in the `language_instructions` map. |
+
+### Template Examples
+
+Here is are a few examples to demonstrate how to use them:
+
+```lua
+  commands = {
+  --- other commands
+    cli_helpgen = {
+      system_message_template = 'You are a documentation assistant to a software developer. Generate documentation for a CLI app using the --help flag style, including usage and options. Only output the help text and nothing else.',
+      user_message_template = 'App name and usage:\n\n```{{filetype}}\n{{text_selection}}```\n. {{command_args}}. . {{language_instructions}}',
+      model = 'codestral',
+      language_instructions = {
+        python = 'Use a standard --help flag style, including usage and options, with example usage if needed.',
+      },
+    },
+    rs_mod_doc = {
+      system_message_template = 'You are a Rust documentation assistant. Given the provided source code, add appropriate module-level documentation that goes at the top of the file. Use the `//!` comment format and example sections as necessary. Include explanations for what each function in the module.',
+      user_message_template = 'Source code:\n```{{filetype}}\n{{text_selection}}\n```\n. {{command_args}}. Generate the doc using module level rust comments `//!` ',
+    },
+
+    -- dummy command to showcase the use of chat_history
+    acronym = {
+      system_message_template = 'You are a helpful {{filetype}} programming assistant that abbreviates identifiers and variables..',
+      user_message_template = 'abbreviate ```{{filetype}}\n{{text_selection}}```\n {{command_args}}',
+      chat_history = {
+        { role = 'user', content = 'abbreviate `configure_user_script`' },
+        { role = 'assistant', content = 'c_u_s' },
+        { role = 'user', content = 'abbreviate ```lua\nlocal = search_common_pattern = {}```\n' },
+        { role = 'assistant', content = 'local = s_c_p = {}' },
+      },
+    },
+```
 
 ## Callback Types
 
