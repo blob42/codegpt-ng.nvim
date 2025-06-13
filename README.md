@@ -1,6 +1,6 @@
 # codegpt-ng.nvim
 
-**codegpt-ng** is a minimalist plugin for neovim that provides commands to interact with AI backends. The focus is around code related usages. So code completion, refactorings, generating docs, etc.
+**codegpt-ng** is a minimalist AI plugin for neovim centered around a command based workflow. It has full support for Ollama, OpenAI, Azure, Anthropic and Groc APIs. You can easilly define new commands, custom prompts with a template system, and model configurations without Lua code. 
 
 This is a fork of the original **CodeGPT** repository from github user **@dpayne**.
 All credit goes to him for the initial work.
@@ -16,8 +16,8 @@ This fork does the following:
 - **Strips thinking tokens** from replies if the model forgets to use codeblocks
 - **New callback types**: `insert_lines` and `prepend_lines`
 - **Model definition inheritance**: Define models that inherit other model parameters
-- **Refactored for idiomatic Lua** and neovim plugin style
-- **Simplified command system** with explicit configuration
+- **Refactored** for idiomatic Lua and neovim plugin style
+- **Simplified command definition** with explicit configuration specification
 - **Chat History**: Add example messages in a command definition
 - **Tests with plenary library**
 - **Fixed statusline** integration
@@ -105,7 +105,6 @@ The top-level command is `:Chat`. The behavior is different depending on whether
 
 * `:Chat <command>`: if there is only one argument and that argument matches a command, it will invoke that command with the given text selection.
 
-In the below example `:Chat tests` will attempt to write units for the selected code.
 
 Here are a few example commands to illustrate it:
 
@@ -119,6 +118,8 @@ Here are a few example commands to illustrate it:
 </div>
 
 #### Tests
+
+In the below example `:Chat tests` will attempt to write units for the selected code.
 
 <div align="center">
   <video controls muted src="https://github.com/user-attachments/assets/b185184b-82ec-4e7f-9e59-39bb44e7e7fa"></video>
