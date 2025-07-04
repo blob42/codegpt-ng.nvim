@@ -19,14 +19,14 @@ local M = {}
 
 ---@type { [string]: codegpt.CommandOpts }
 local default_commands = {
-	["completion"] = {
+	completion = {
 		user_message_template = "I have the following {{language}} code snippet: ```{{filetype}}\n{{text_selection}}```\nComplete the rest. Use best practices and write really good documentation. {{language_instructions}} Only return the code snippet and nothing else.",
 		language_instructions = {
 			cpp = "Use modern C++ features.",
 			java = "Use modern Java syntax. Use var when applicable.",
 		},
 	},
-	["generate"] = {
+	generate = {
 		user_message_template = "Write code in {{language}} using best practices and write really good documentation. {{language_instructions}} Only return the code snippet and nothing else. {{command_args}}",
 		language_instructions = {
 			cpp = "Use modern C++ features.",
@@ -34,38 +34,38 @@ local default_commands = {
 		},
 		allow_empty_text_selection = true,
 	},
-	["code_edit"] = {
+	code_edit = {
 		user_message_template = "I have the following {{language}} code: ```{{filetype}}\n{{text_selection}}```\n{{command_args}}. {{language_instructions}} Only return the code snippet and nothing else.",
 		language_instructions = {
 			cpp = "Use modern C++ syntax.",
 		},
 	},
-	["explain"] = {
+	explain = {
 		user_message_template = "Explain the following {{language}} code: ```{{filetype}}\n{{text_selection}}``` Explain as if you were explaining to another developer.",
 		callback_type = "text_popup",
 	},
-	["question"] = {
+	question = {
 		user_message_template = "I have a question about the following {{language}} code: ```{{filetype}}\n{{text_selection}}``` {{command_args}}",
 		callback_type = "text_popup",
 	},
-	["debug"] = {
+	debug = {
 		user_message_template = "Analyze the following {{language}} code for bugs: ```{{filetype}}\n{{text_selection}}```",
 		callback_type = "text_popup",
 	},
-	["doc"] = {
+	doc = {
 		user_message_template = "I have the following {{language}} code: ```{{filetype}}\n{{text_selection}}```\nWrite really good documentation using best practices for the given language. Attention paid to documenting parameters, return types, any exceptions or errors. {{language_instructions}} Only return the documentation snippet and nothing else.",
 		language_instructions = {
 			cpp = "Use doxygen style comments for functions.",
 			java = "Use JavaDoc style comments for functions.",
 		},
 	},
-	["opt"] = {
+	opt = {
 		user_message_template = "I have the following {{language}} code: ```{{filetype}}\n{{text_selection}}```\nOptimize this code. {{language_instructions}} Only return the code snippet and nothing else.",
 		language_instructions = {
 			cpp = "Use modern C++.",
 		},
 	},
-	["tests"] = {
+	tests = {
 		user_message_template = "I have the following {{language}} code: ```{{filetype}}\n{{text_selection}}```\nWrite really good unit tests using best practices for the given language. {{language_instructions}} Only return the unit tests. Only return the code snippet and nothing else. ",
 		callback_type = "code_popup",
 		language_instructions = {
@@ -73,10 +73,15 @@ local default_commands = {
 			java = "Generate unit tests using the junit framework.",
 		},
 	},
-	["chat"] = {
+	chat = {
 		system_message_template = "You are a general assistant to a software developer.",
 		user_message_template = "{{command_args}}",
 		callback_type = "text_popup",
+	},
+	proofread = {
+		callback_type = "text_popup",
+		system_message_template = "You are a {{filetype}} code proofreading assistant. Review the provided code snippet for errors, potential improvements, and best practices. Consider style, correctness, and idiomatic usage. Follow any additional instructions provided by the user.",
+		user_message_template = "I have the following code snippet to review: ```{{filetype}} {{text_selection}}```. Please proofread it for errors and provide feedback. Additional instructions: {{command_args}}",
 	},
 }
 
