@@ -142,36 +142,40 @@ Here is the full list of predefined command actions grouped by the input type
   commands ~
 			
  completion		input type: text selection
- 			Will ask ChatGPT to complete the selected code.
+ 			Will ask LLM to complete the selected code.
  
- code_edit		input type: text selection + arguments
- 			Will ask ChatGPT to apply the given instructions (the
+ code_edit		input type: text selection [ + arguments ]
+ 			Will ask LLM to apply the given instructions (the
  			command args) to the selected code.
  
  explain		input type: text selection 
- 			Will ask ChatGPT to explain the selected code.
+ 			Will ask LLM to explain the selected code.
  
  question		input type: text selection + arguments
- 			Will pass the commands args to ChatGPT and return the
+ 			Will pass the commands args to LLM and return the
  			answer in a text popup.
  
  debug			input type: text selection	
- 			Will pass the code selection to ChatGPT analyze it for
+ 			Will pass the code selection to LLM analyze it for
  			bugs, the results will be in a text popup.
  
  doc			input type: text selection	
- 			Will ask ChatGPT to document the selected code.
+ 			Will ask LLM to document the selected code.
  
  opt			input type: text selection	
- 			Will ask ChatGPT to optimize the selected code.
+ 			Will ask LLM to optimize the selected code.
  
- tests			input type: text selection	
- 			Will ask ChatGPT to write unit tests for the selected
+ tests			input type: text selection [ + arguments ]
+ 			Will ask LLM to write unit tests for the selected
  			code.
  
  chat			input type: command args	
-			Will pass the given command args to ChatGPT and return
+			Will pass the given command args to LLM and return
 			the response in a popup.
+
+ proofread		input type: text selection [ + arguments ]	
+			Ask LLM to review the selected snippet/buffer.
+
 
 USING RANGE MODIFIER                                  *codegpt-commands-range*
 

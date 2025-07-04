@@ -84,7 +84,7 @@ The top-level command is `:Chat`. The behavior is different depending on whether
 
 ### Completion
 
-* `:Chat` with text selection will trigger the `completion` command, ChatGPT will try to complete the selected code snippet.
+* `:Chat` with text selection will trigger the `completion` command, LLM will try to complete the selected code snippet.
 <div align="center">
   <p>
     <video controls muted src="https://github.com/user-attachments/assets/1c26404e-5c3b-4729-ba03-83454c53de91"></video>
@@ -154,15 +154,16 @@ Here is the full list of predefined command actions:
 
 | command      | input | Description |
 |--------------|---- |------------------------------------|
-| completion |  text selection | Will ask ChatGPT to complete the selected code. |
-| code_edit  |  text selection + command args | Will ask ChatGPT to apply the given instructions (the command args) to the selected code. |
-| explain  |  text selection | Will ask ChatGPT to explain the selected code. |
-| question  |  text selection | Will pass the commands args to ChatGPT and return the answer in a text popup. |
-| debug  |  text selection | Will pass the code selection to ChatGPT analyze it for bugs, the results will be in a text popup. |
-| doc  |  text selection | Will ask ChatGPT to document the selected code. |
-| opt  |  text selection | Will ask ChatGPT to optimize the selected code. |
-| tests  |  text selection | Will ask ChatGPT to write unit tests for the selected code. |
-| chat  |  command args | Will pass the given command args to ChatGPT and return the response in a popup. |
+| completion |  selection | Will ask LLM to complete the selected code. |
+| code_edit  |  selection [ + args ] | Will ask LLM to apply the given instructions (the command args) to the selected code. |
+| explain  |  selection | Will ask LLM to explain the selected code. |
+| question  |  selection + args | Will pass the commands args to LLM and return the answer in a text popup. |
+| debug  |  selection | Will pass the code selection to LLM analyze it for bugs, the results will be in a text popup. |
+| doc  |  selection | Will ask LLM to document the selected code. |
+| opt  |  selection | Will ask LLM to optimize the selected code. |
+| tests  |  selection + args | Will ask LLM to write unit tests for the selected code. |
+| chat  |  args | Will pass the given command args to LLM and return the response in a popup. |
+| proofread  |  selection [ + args ] | Asks LLM to review the provided code selection/buffer. |
 
 ## Configuration
 
