@@ -171,6 +171,9 @@ function M.select_model()
 		prompt = "ollama: available models",
 		format_item = function(item)
 			local display = ""
+			if item.name == Config.model_override then
+				display = "(*) "
+			end
 			if item.model_source == "local" then
 				display = "[L] "
 			elseif item.model_source == "remote" then
