@@ -31,10 +31,9 @@ function M.get_model_by_name(name)
 
 	-- (optional) inherit a parent model
 	if result ~= nil and result.from ~= nil and #result.from > 0 then
-		local parent_name, parent = M.get_model_by_name(result.from)
+		local _, parent = M.get_model_by_name(result.from)
 		if parent ~= nil then
 			result = vim.tbl_deep_extend("force", parent, result)
-			selected = parent_name
 		end
 	end
 
@@ -83,10 +82,9 @@ function M.get_model()
 
 	-- (optional) inherit a parent model
 	if result ~= nil and result.from ~= nil and #result.from > 0 then
-		local parent_name, parent = M.get_model_by_name(result.from)
+		local _, parent = M.get_model_by_name(result.from)
 		if parent ~= nil then
 			result = vim.tbl_deep_extend("force", parent, result)
-			selected = parent_name
 		end
 	end
 

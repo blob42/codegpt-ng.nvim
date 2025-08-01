@@ -207,7 +207,10 @@ describe("models selection", function()
 			max_tokens = 420,
 			append_string = "/no_think",
 		}))
-		assert(name == "foo")
+
+		-- name of inherting model should take precedence
+		assert(name == "foobar")
+
 		local name, model = models.get_model_by_name("bar")
 		assert(vim.deep_equal(model, {
 			temperature = 0,
@@ -216,6 +219,6 @@ describe("models selection", function()
 			max_tokens = 420,
 			append_string = "/no_think",
 		}))
-		assert(name == "foo")
+		assert(name == "bar")
 	end)
 end)
