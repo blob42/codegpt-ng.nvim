@@ -33,7 +33,7 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 	if cmd_opts.max_output_tokens ~= nil then
 		Utils.fail_if_exceed_context_window(cmd_opts.max_tokens, messages)
 		max_tokens = cmd_opts.max_output_tokens
-	else
+	elseif not cmd_opts.fixed_max_tokens then
 		max_tokens = get_max_tokens(cmd_opts.max_tokens, messages)
 	end
 

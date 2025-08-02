@@ -85,7 +85,7 @@ local default_commands = {
 	},
 }
 
-M.model_override = nil
+M.model_override = nil -- override model to use
 M.popup_override = nil
 M.persistent_override = nil
 
@@ -113,6 +113,7 @@ M.persistent_override = nil
 ---@class codegpt.Model
 ---@field alias? string An alias for this model
 ---@field max_tokens? number The maximum number of tokens to use including the prompt tokens.
+---@field fixed_max_tokens? boolean Disable max_token calculation heuristics
 ---@field temperature? number 0 -> 1, what sampling temperature to use.
 ---@field number_of_choices? number OpenAI `n' chat completion choices
 ---@field max_output_tokens? number An upper bound for the number of tokens that can be generated for a response, including visible output tokens and reasoning tokens.

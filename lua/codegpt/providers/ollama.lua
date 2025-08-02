@@ -28,7 +28,11 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 	local messages = Messages.generate_messages(command, cmd_opts, command_args, text_selection)
 
 	-- max # of tokens to generate
-	local max_tokens = get_max_tokens(cmd_opts.max_tokens, messages)
+	local max_tokens = cmd_opts.max_tokens
+	if not cmd_opts.fixed_max_tokens then
+		max_tokens = get_max_tokens(max_tokens, messages)
+	end
+
 	local model_name, model = models.get_model_for_cmdopts(cmd_opts)
 
 	local model_opts = {}
