@@ -171,9 +171,9 @@ Here is the full list of predefined command actions:
 
 ```lua
 require("codegpt").setup({
-  api = {
-    provider = "openai",  -- or "Ollama", "Azure", etc.
-    openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
+  connection = {
+    api_provider = "openai",  -- or "Ollama", "Azure", etc.
+    openai_api_key = vim.fn.getenv("OPENAI_API_KEY"), -- env OPENAI_API_KEY takes precedences
     chat_completions_url = "https://api.openai.com/v1/chat/completions",
   },
   models { 
