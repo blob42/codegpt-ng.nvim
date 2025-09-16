@@ -133,7 +133,7 @@ M.persistent_override = nil
 
 ---@class codegpt.Connection
 ---@field chat_completions_url? string OpenAI API compatible API endpoint
----@field openai_api_key? string https://platform.openai.com/account/api-keys
+---@field openai_api_key? string | nil Defaults to the value of the `OPENAI_API_KEY` environment variable. Get one here: https://platform.openai.com/account/api-keys
 ---@field ollama_base_url? string ollama base api url default: http://localhost:11434/api/
 ---@field api_provider? codegpt.ProviderType Type of provider for the OpenAI API endpoint
 ---@field proxy? string [protocol://]host[:port] e.g. socks5://127.0.0.1:9999
@@ -167,6 +167,7 @@ M.persistent_override = nil
 local defaults = {
 	connection = {
 		api_provider = "openai",
+                openai_api_key = os.getenv("OPENAI_API_KEY"),
 		chat_completions_url = "https://api.openai.com/v1/chat/completions",
 		ollama_base_url = "http://localhost:11434",
 		proxy = nil,
@@ -233,11 +234,6 @@ M.opts = {}
 ---@param options? codegpt.Options
 M.setup = function(options)
 	M.opts = vim.tbl_deep_extend("force", {}, defaults, options or {})
-
-	-- env takes precedences
-	if vim.fn.getenv("OPENAI_API_KEY") ~= nil then
-		M.opts.connection.openai_api_key = vim.fn.getenv("OPENAI_API_KEY")
-	end
 
 	-- print(vim.inspect(M.opts))
 end
