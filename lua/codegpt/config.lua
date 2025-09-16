@@ -58,6 +58,7 @@ local default_commands = {
 			cpp = "Use doxygen style comments for functions.",
 			java = "Use JavaDoc style comments for functions.",
 		},
+		callback_type = "prepend_lines",
 	},
 	opt = {
 		user_message_template = "I have the following {{language}} code: ```{{filetype}}\n{{text_selection}}```\nOptimize this code. {{language_instructions}} Only return the code snippet and nothing else.",
