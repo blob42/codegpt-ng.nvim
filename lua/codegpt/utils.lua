@@ -190,6 +190,10 @@ function M.remove_trailing_whitespace(lines)
 	return lines
 end
 
+M.get_accurate_tokens = function(messages)
+	return false, 0
+end
+
 ---@param max_context_length integer
 ---@param messages table[]
 function M.fail_if_exceed_context_window(max_context_length, messages)

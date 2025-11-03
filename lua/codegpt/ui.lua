@@ -221,8 +221,22 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 					return
 				end
 				local delta = payload.choices[1].delta
-				if delta and delta.content ~= vim.NIL then
-					content = delta.content
+				if delta then
+					-- Check for both content and reasoning_content
+					local content_to_add = ""
+					if delta.content ~= nil and delta.content ~= vim.NIL then
+						content_to_add = delta.content
+						-- TODO: boilerplate for handling reasoning content
+						-- TODO: more efficient text stream algorithm with vim gui loop
+						-- elseif delta.reasoning_content ~= nil and delta.reasoning_content ~= vim.NIL then
+						-- 	content_to_add = delta.reasoning_content
+					end
+
+					if content_to_add ~= "" then
+						content = content_to_add
+					else
+						content = ""
+					end
 				else
 					content = ""
 				end
@@ -231,7 +245,9 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 			end
 		end
 
-		vim.api.nvim_buf_set_text(stream_ui_elem.bufnr, -1, -1, -1, -1, vim.split(content, "\n"))
+		if #content > 0 then
+			vim.api.nvim_buf_set_text(stream_ui_elem.bufnr, -1, -1, -1, -1, vim.split(content, "\n"))
+		end
 	end
 
 	local nlines = vim.api.nvim_buf_line_count(stream_ui_elem.bufnr)
