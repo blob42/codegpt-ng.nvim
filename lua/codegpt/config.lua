@@ -15,6 +15,7 @@ local M = {}
 ---@field append_string? string String to append to prompt -- ex: /no_think
 ---@field model? string Model to always use with this command
 ---@field chat_history? codegpt.Chatmsg[]
+---@field stream_output? string override output streaming for this command
 ---@field [string] any -- merged command parameters
 
 ---@type { [string]: codegpt.CommandOpts }

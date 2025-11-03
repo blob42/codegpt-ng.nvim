@@ -90,8 +90,10 @@ local function get_cmd_opts(cmd)
 		opts.callback = opts.callback_type
 	else
 		if
-			(Config.opts.ui.stream_output and opts.callback_type == "text_popup")
-			or opts.callback_type == "test_popup_stream"
+			(
+				(Config.opts.ui.stream_output and opts.callback_type == "text_popup")
+				or opts.callback_type == "test_popup_stream"
+			) and (opts.stream_output ~= false)
 		then
 			opts.callback = text_popup_stream
 			is_stream = true
