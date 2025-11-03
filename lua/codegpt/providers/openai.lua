@@ -54,24 +54,35 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 	return request
 end
 
-local function curl_callback(response, cb)
+---@param response table plenary.curl http response
+---@param cb? fun(lines: string)
+---@param is_stream boolean
+local function curl_callback(response, cb, is_stream)
 	local status = response.status
 	local body = response.body
 	if status ~= 200 then
 		body = body:gsub("%s+", " ")
-		print("Error: " .. status .. " " .. body)
+		vim.schedule_wrap(function(_body, _status)
+			errors.api_error("openai", _body, _status)
+		end)(body, status)
+		Api.run_finished_hook()
 		return
 	end
 
 	if body == nil or body == "" then
-		print("Error: No body")
+		vim.schedule_wrap(function()
+			errors.api_error("openai", "empty response body")
+		end)
+		Api.run_finished_hook()
 		return
 	end
 
-	vim.schedule_wrap(function(msg)
-		local json = vim.fn.json_decode(msg)
-		M.handle_response(json, cb)
-	end)(body)
+	if not is_stream then
+		vim.schedule_wrap(function(msg)
+			local json = vim.fn.json_decode(msg)
+			M.handle_response(json, cb)
+		end)(body)
+	end
 
 	Api.run_finished_hook()
 end
@@ -125,9 +136,39 @@ function M.handle_response(json, cb)
 	end
 end
 
+---@param payload table payload sent to api
+---@param stream_cb fun(data: table, job: table) callback to handle the resonse json stream
+function M.make_stream_call(payload, stream_cb)
+	local payload_str = vim.fn.json_encode(payload)
+	local url = Config.opts.connection.chat_completions_url .. "/chat/completions"
+	local headers = M.make_headers()
+	Api.run_started_hook()
+	Api.current_job = curl.post(url, {
+		body = payload_str,
+		headers = headers,
+		stream = function(error, data, job)
+			if error ~= nil then
+				vim.schedule_wrap(function(err)
+					vim.notify(err, vim.log.levels.ERROR)
+				end)(error)
+			end
+			vim.schedule_wrap(function(dat, jb)
+				stream_cb(dat, jb)
+			end)(data, job)
+		end,
+		callback = function(response)
+			curl_callback(response, nil, true)
+			Api.run_finished_hook()
+		end,
+		on_error = errors.curl_error,
+		insecure = Config.opts.connection.allow_insecure,
+		proxy = Config.opts.connection.proxy,
+	})
+end
+
 function M.make_call(payload, cb)
 	local payload_str = vim.fn.json_encode(payload)
-	local url = Config.opts.connection.chat_completions_url
+	local url = Config.opts.connection.chat_completions_url .. "/chat/completions"
 	local headers = M.make_headers()
 	Api.run_started_hook()
 	Api.current_job = curl.post(url, {
@@ -143,7 +184,29 @@ function M.make_call(payload, cb)
 end
 
 function M.get_models()
-	vim.notify("openai: not implemented", vim.log.levels.WARN)
+	local url = Config.opts.connection.chat_completions_url .. "/models"
+	local ok, response = pcall(function()
+		return curl.get(url, {
+			insecure = Config.opts.connection.allow_insecure,
+			proxy = Config.opts.connection.proxy,
+		})
+	end)
+	if not ok then
+		error("Could not retrieve models from " .. url .. ".\nError: " .. response)
+		return {}
+	end
+	local ok, json = pcall(vim.json.decode, response.body)
+	if not ok then
+		error("Could not parse the response from " .. url)
+		return {}
+	end
+	local models = {}
+	for _, model in ipairs(json.data) do
+		table.insert(models, {
+			name = model.id,
+		})
+	end
+	return models
 end
 
 return M

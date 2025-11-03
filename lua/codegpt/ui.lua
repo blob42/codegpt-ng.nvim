@@ -9,7 +9,6 @@ local M = {}
 
 local popup
 local split
-local buffer = ""
 
 local function create_horizontal()
 	if not split then
@@ -136,12 +135,7 @@ local stream_ui_elem = nil
 
 ---@param job Job
 function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_row, end_col)
-	if job ~= nil and job.is_shutdown then
-		streaming = false
-		return
-	end
 	if not streaming then
-		buffer = ""
 		streaming = true
 		stream_ui_elem = create_window()
 
@@ -170,6 +164,18 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 			streaming = false
 		end, { noremap = true, silent = true })
 
+		-- replace lines when ctrl-o pressed
+		stream_ui_elem:map("n", Config.opts.ui.mappings.use_as_output, function()
+			vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
+			ui_elem:unmount()
+		end)
+
+		-- selecting all the content when ctrl-i is pressed
+		-- so the user can proceed with another API request
+		stream_ui_elem:map("n", Config.opts.ui.mappings.use_as_input, function()
+			vim.api.nvim_feedkeys("ggVG:Chat ", "n", false)
+		end, { noremap = false })
+
 		vim.api.nvim_set_option_value("filetype", filetype, { buf = stream_ui_elem.bufnr })
 		vim.api.nvim_set_option_value("wrap", true, { win = stream_ui_elem.winid })
 	end
@@ -178,41 +184,56 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 		error("creating stream window")
 	end
 
-	local lines = {}
-	if stream == nil and #buffer > 0 then
-		table.insert(lines, buffer)
-		buffer = ""
-		streaming = false
-	elseif stream == nil then
+	if stream == nil then
 		streaming = false
 		return
 	else
 		local ok, payload = pcall(function()
-			return vim.fn.json_decode(stream)
+			local data = stream:gsub("^data: ", "")
+			return vim.fn.json_decode(data)
 		end)
 		if not ok then
 			streaming = false
 			return
 		end
-		local content = payload.message.content
-		local content_lines = vim.split(content, "\n")
-		if #content_lines == 1 then
-			buffer = buffer .. content_lines[1]
-		elseif #content_lines > 1 then
-			if #buffer > 0 then
-				buffer = buffer .. content_lines[1]
-				table.insert(lines, buffer)
-				buffer = ""
-			end
 
-			for line in vim.iter(content_lines):skip(1) do
-				table.insert(lines, line)
+		-- Ollama stream format:
+		-- {"model":"qwen3-coder:30b-a3b-xs","created_at":"2025-11-01T16:18:39.344140114Z","message":{"role":"assistant","content":"Here"},"done":false}
+		-- {"model":"qwen3-coder:30b-a3b-xs","created_at":"2025-11-01T16:18:39.353522498Z","message":{"role":"assistant","content":"'s"},"done":false}
+		--
+		-- OpenAI stream format:
+		-- data: {"choices":[{"finish_reason":null,"index":0,"delta":{"content":"\t"}}],"created":1762014260,"id":"chatcmpl-dLoo8TonbY5vOHOru12fbVkrm1YISDsy","model":"qwen3-fast","system_fingerprint":"b6907-2101f19aa","object":"chat.completion.chunk"}
+		-- data: {"choices":[{"finish_reason":null,"index":0,"delta":{"content":"\treturn"}}],"created":1762014260,"id":"chatcmpl-dLoo8TonbY5vOHOru12fbVkrm1YISDsy","model":"qwen3-fast","system_fingerprint":"b6907-2101f19aa","object":"chat.completion.chunk"}
+
+		local content = ""
+		if Config.opts.connection.api_provider == "ollama" then
+			if payload.done then
+				streaming = false
+				return
+			end
+			content = payload.message.content or ""
+		else
+			-- Handle OpenAI streaming format
+			if payload.choices and #payload.choices > 0 then
+				local finish = payload.choices[1].finish_reason
+				if finish == "stop" then
+					streaming = false
+					return
+				end
+				local delta = payload.choices[1].delta
+				if delta and delta.content ~= vim.NIL then
+					content = delta.content
+				else
+					content = ""
+				end
+			else
+				content = ""
 			end
 		end
+
+		vim.api.nvim_buf_set_text(stream_ui_elem.bufnr, -1, -1, -1, -1, vim.split(content, "\n"))
 	end
-	if #lines > 0 then
-		vim.api.nvim_buf_set_lines(stream_ui_elem.bufnr, -2, -1, false, lines)
-	end
+
 	local nlines = vim.api.nvim_buf_line_count(stream_ui_elem.bufnr)
 	vim.api.nvim_win_set_cursor(stream_ui_elem.winid, { nlines, 0 })
 end
