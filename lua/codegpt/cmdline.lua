@@ -16,15 +16,22 @@ M.complete_func = function(arglead, cmdline, pos)
 
 	-- list all available variables
 	else
+		-- autocomplete list open files (listed buffers) using #{%token}
 		if arglead:match("#{%%%w*") then
-			-- list all
-			local bufs = vim.tbl_filter(function(bufid)
-				return vim.api.nvim_buf_is_loaded(bufid) and bufid ~= 0
+			local bufnrs = vim.tbl_filter(function(b)
+				if 1 ~= vim.fn.buflisted(b) then
+					return false
+				end
+				return true
 			end, vim.api.nvim_list_bufs())
 
-			bufs = vim.tbl_map(function(bufid)
+			if not next(bufnrs) then
+				return
+			end
+
+			local bufs = vim.tbl_map(function(bufid)
 				return "#{" .. vim.api.nvim_buf_get_name(bufid) .. ":" .. bufid .. "}"
-			end, bufs)
+			end, bufnrs)
 			cmd = vim.list_extend(cmd, bufs)
 		end
 	end

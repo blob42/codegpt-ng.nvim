@@ -33,7 +33,7 @@ end
 
 local function generate_messages(command, cmd_opts, command_args, text_selection)
 	local system_message =
-		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
+		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts, true)
 	local user_message = Render.render(command, cmd_opts.user_message_template, command_args, text_selection, cmd_opts)
 	if is_legacy() then
 		return generate_messages_legacy(command, cmd_opts, command_args, text_selection, system_message, user_message)

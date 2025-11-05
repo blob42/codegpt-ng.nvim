@@ -21,7 +21,7 @@ end
 
 function M.make_request(command, cmd_opts, command_args, text_selection)
 	local system_message =
-		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
+		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts, true)
 	local messages = generate_messages(command, cmd_opts, command_args, text_selection)
 
 	-- context window is 100k-200k tokens

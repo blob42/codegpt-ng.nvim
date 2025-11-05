@@ -24,6 +24,8 @@ function M.get_visual_selection()
 		-- If we're in visual mode, use 'v' and '.'
 		start_pos = vim.api.nvim_buf_get_mark(bufnr, "v")
 		end_pos = vim.api.nvim_buf_get_mark(bufnr, ".")
+
+		-- TODO: find better UX to use marks and avoid sticky selection
 	else
 		-- Fallback to marks if not in visual mode
 		start_pos = vim.api.nvim_buf_get_mark(bufnr, "<")

@@ -7,7 +7,7 @@ local M = {}
 ---@param text_selection string
 function M.generate_messages(command, cmd_opts, command_args, text_selection)
 	local system_message =
-		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts)
+		Render.render(command, cmd_opts.system_message_template, command_args, text_selection, cmd_opts, true)
 	local user_message = Render.render(command, cmd_opts.user_message_template, command_args, text_selection, cmd_opts)
 	if cmd_opts.append_string then
 		user_message = user_message .. " " .. cmd_opts.append_string
