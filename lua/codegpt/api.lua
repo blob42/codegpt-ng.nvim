@@ -1,4 +1,5 @@
 local Config = require("codegpt.config")
+local Ui = require("codegpt.ui")
 
 local M = {}
 
@@ -63,6 +64,7 @@ function M.run_finished_hook()
 end
 
 function M.cancel_job()
+	Ui.canceled_stream = true
 	if M.current_job ~= nil then
 		M.current_job:shutdown()
 		M.run_finished_hook()
