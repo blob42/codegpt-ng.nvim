@@ -89,6 +89,7 @@ local default_commands = {
 
 M.model_override = nil -- override model to use
 M.popup_override = nil
+M.stream_override = nil -- override streaming mode
 M.persistent_override = nil
 
 ---@alias codegpt.ProviderType

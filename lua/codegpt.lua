@@ -68,5 +68,7 @@ end
 M.setup = Config.setup
 M.select_model = Models.select_model
 M.cancel_request = Api.cancel_job
+M.stream_on = Api.stream_on
+M.stream_off = Api.stream_off
 
 return M

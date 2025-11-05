@@ -71,4 +71,16 @@ function M.cancel_job()
 	end
 end
 
+function M.stream_on()
+	Config.stream_override = true
+	local flag = "true"
+	print("stream override = " .. flag)
+end
+
+function M.stream_off()
+	Config.stream_override = false
+	local flag = "false"
+	print("stream override = " .. flag)
+end
+
 return M
