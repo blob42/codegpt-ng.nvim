@@ -222,7 +222,7 @@ local defaults = {
 		temperature = 0.7,
 		number_of_choices = 1,
 		system_message_template = "You are a {{language}} coding assistant.",
-		user_message_template = "",
+		user_message_template = "{{command}} {{command_args}}\n```{{language}}\n{{text_selection}}\n```\n",
 		callback_type = "replace_lines",
 		allow_empty_text_selection = false,
 		extra_params = {}, -- extra parameters sent to the API
@@ -237,8 +237,6 @@ M.opts = {}
 ---@param options? codegpt.Options
 M.setup = function(options)
 	M.opts = vim.tbl_deep_extend("force", {}, defaults, options or {})
-
-	-- print(vim.inspect(M.opts))
 end
 
 return M

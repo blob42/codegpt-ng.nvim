@@ -7,8 +7,9 @@ local function is_visual_mode(mode)
 	return mode == "v" or mode == "V" or mode == "^V"
 end
 
-function M.get_filetype()
-	local bufnr = vim.api.nvim_get_current_buf()
+---@param bufnr number
+function M.get_filetype(bufnr)
+	assert(bufnr, "missing bufnr")
 	return vim.api.nvim_get_option_value("filetype", { buf = bufnr })
 end
 
@@ -24,8 +25,6 @@ function M.get_visual_selection()
 		-- If we're in visual mode, use 'v' and '.'
 		start_pos = vim.api.nvim_buf_get_mark(bufnr, "v")
 		end_pos = vim.api.nvim_buf_get_mark(bufnr, ".")
-
-		-- TODO: find better UX to use marks and avoid sticky selection
 	else
 		-- Fallback to marks if not in visual mode
 		start_pos = vim.api.nvim_buf_get_mark(bufnr, "<")
@@ -65,8 +64,10 @@ function M.get_selected_lines(opts)
 	local start_row, start_col, end_row, end_col
 	if (opts.line2 - opts.line1 + 1) == vim.api.nvim_buf_line_count(bufnr) then
 		start_row, start_col, end_row, end_col = 0, 0, -1, -1
-	else
+	elseif opts.range > 0 then
 		start_row, start_col, end_row, end_col = unpack(M.get_visual_selection())
+	else
+		start_row, start_col, end_row, end_col = unpack({ 0, 0, 0, 0 })
 	end
 
 	local lines = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})

@@ -30,7 +30,7 @@ local function replacement(job, lines, bufnr, range)
 	Utils.fix_indentation(bufnr, start_row, end_row, lines)
 	-- if the buffer is not valid, open a popup. This can happen when the user closes the previous popup window before the request is finished.
 	if vim.api.nvim_buf_is_valid(bufnr) ~= true then
-		Ui.popup(job, lines, Utils.get_filetype(), bufnr, range)
+		Ui.popup(job, lines, Utils.get_filetype(bufnr), bufnr, range)
 	else
 		return lines
 	end
@@ -46,7 +46,7 @@ M.CallbackTypes = {
 		local start_row, _, end_row, _ = unpack(range)
 		lines = Utils.trim_to_code_block(lines)
 		Utils.fix_indentation(bufnr, start_row, end_row, lines)
-		Ui.popup(job, lines, Utils.get_filetype(), bufnr, range)
+		Ui.popup(job, lines, Utils.get_filetype(bufnr), bufnr, range)
 	end,
 	["replace_lines"] = function(job, lines, bufnr, range)
 		lines = replacement(job, lines, bufnr, range)
