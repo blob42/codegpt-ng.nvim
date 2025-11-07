@@ -92,6 +92,12 @@ M.popup_override = nil
 M.stream_override = nil -- override streaming mode
 M.persistent_override = nil
 
+M.debug_prompt = false
+M.toggle_debug_prompt = function()
+	M.debug_prompt = not M.debug_prompt
+	vim.notify(vim.fn.printf("debug mode = %b", M.debug_prompt), vim.log.levels.INFO, { title = "CodeGPT" })
+end
+
 ---@alias codegpt.ProviderType
 ---|'ollama'
 ---|'openai'

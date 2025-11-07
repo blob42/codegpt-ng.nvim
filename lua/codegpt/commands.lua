@@ -133,6 +133,10 @@ function M.run_cmd(command, command_args, text_selection, range)
 	end
 
 	local request = provider.make_request(command, cmd_opts, command_args, text_selection, is_stream)
+	if Config.debug_prompt then
+		print(vim.fn.json_encode(request))
+		return
+	end
 	if is_stream then
 		provider.make_stream_call(request, new_callback)
 	else
