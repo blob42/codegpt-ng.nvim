@@ -2,29 +2,7 @@
 
 **codegpt-ng** is a minimalist AI plugin for neovim centered around a command based workflow. It has full support for Ollama, OpenAI, Azure, Anthropic and Groc APIs. You can easilly define new commands, custom prompts with a template system, and model configurations without Lua code. 
 
-This is a fork of the original **CodeGPT** repository from github user **@dpayne**.
-All credit goes to him for the initial work.
-
-This fork does the following:
-
-- **Full support for Ollama and OpenAI API** 
-- **Streaming mode** for real-time popup responses
-- [**New table-based configuration**](#example-configuration) instead of global variables
-- [**New commands**](#other-available-commands) and added support to the `%` range modifier
-- **Ability to cancel** current request.
-- **UI Query and select** local or remote model
-- **Strips thinking tokens** from replies if the model forgets to use codeblocks
-- **New callback types**: `insert_lines` and `prepend_lines`
-- **Model definition inheritance**: Define models that inherit other model parameters
-- **Refactored** for idiomatic Lua and neovim plugin style
-- **Simplified command definition** with explicit configuration specification
-- **Chat History**: Add example messages in a command definition
-- **Tests with plenary library**
-- **Fixed statusline** integration
-
-Although this fork introduces breaking changes and a substantial rewrite, I've tried to preserve the original project's minimalist spirit — a tool that connects to AI APIs without getting in the way. The goal remains to provide simple, code-focused interactions that stay lightweight and unobtrusive, letting developers leverage LLMs while maintaining control over their workflow.
-
-In particular, the model definition flow was carefully designed to quickly add custom model profiles for specific cases and easily switch between them or assign them to custom commands.
+This [is a fork](docs/fork.md) of the original **CodeGPT** repository from github user **@dpayne**.
 
 **[How Does It Compare To X](./doc/how-does-it-compare-to.md)**
 
@@ -309,11 +287,12 @@ The `system_message_template` and `user_message_template` can contain the follow
 
 | macro | description |
 |------|-------------|
-| `{{filetype}}` | The `filetype` of the current buffer. |
-| `{{text_selection}}` | The selected text in the current buffer. |
-| `{{language}}` | The name of the programming language in the current buffer. |
-| `{{command_args}}` | Everything passed to the command as an argument, joined with spaces. |
-| `{{language_instructions}}` | The found value in the `language_instructions` map. |
+| `{{filetype}}` | The `filetype` of the current buffer |
+| `{{text_selection}}` | The selected text in the current buffer |
+| `{{language}}` | The name of the programming language in the current buffer |
+| `{{command_args}}` | Everything passed to the command as an argument, joined with spaces |
+| `{{command}}` | The command (first token after `:Chat`)
+| `{{language_instructions}}` | The found value in the `language_instructions` map |
 
 ### Template Examples
 
@@ -357,6 +336,25 @@ Here is are a few examples to demonstrate how to use them:
 | replace_lines | Replaces the current lines with the response. If no text is selected, it will insert the response at the cursor. |
 | insert_lines  | Inserts the response after the current cursor line without replacing any existing text. |
 | prepend_lines | Inserts the response before the current lines. If no text is selected, it will insert the response at the beginning of the buffer. |
+
+## Command-Line Autocompletion with Buffer and Register Context
+
+Enhance your command-line experience by injecting contextual Vim variables—such as open buffers and registers—directly into prompts using the `:Chat` command or within templates.
+
+### Injecting Buffer Content
+Use `#{bufnr}` to insert the content of a buffer. Type `#{%<TAB>` to trigger a menu of currently open buffers, expanding into `#{path:bufnr}` for dynamic selection.
+
+### Injecting Register Content
+Insert register contents via `""x`, where `x` is the register name. This dynamically expands the register’s value in place.
+
+#### Example Usage:
+
+```vim
+:Chat summarize #{%<TAB>  -- selection via autocomplete menu
+:Chat mycommnd take into consideration #{main.c:2} -- References main.c buffer in the prompt
+:'<,'>Chat fix this code given the context in: ""a  --Inserts content of register `a` as context
+```
+
 
 ## Example Configuration
 
@@ -443,7 +441,7 @@ popups
     temperature = 0.7,
     number_of_choices = 1,
     system_message_template = "You are a {{language}} coding assistant.",
-    user_message_template = "",
+    user_message_template = "{{command}} {{command_args}}\n```{{language}}\n{{text_selection}}\n```\n",
     callback_type = "replace_lines",
     allow_empty_text_selection = false,
     extra_params = {},
@@ -455,10 +453,12 @@ popups
 
 ## External API
 
-- `setup({config})`: setup plugin
-- `select_model()`: list local defined and remote available models 
-- `cancel_request()`: Cancel ongoing request
-
+- `setup({config})`: Setup the plugin with configuration options.
+- `select_model()`: List local defined and remote available models for selection.
+- `cancel_request()`: Cancel an ongoing request or job.
+- `stream_on()`: Enable streaming output for responses.
+- `stream_off()`: Disable streaming output for responses.
+- `debug_prompt()`: Toggle debug prompt feature to aid in debugging or development.
 
 ## License
 
