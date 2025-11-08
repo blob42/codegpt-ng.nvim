@@ -1,6 +1,6 @@
 ## High
-- [ ] implement streaming for OpenAI APIs. 
-- [ ] list/select with telescope picker
+- [ ] telescope pickers
+- [x] implement streaming for OpenAI APIs. 
 - [x] model definition inheritance: define model from previous one
 - [x] cancel current request
 
