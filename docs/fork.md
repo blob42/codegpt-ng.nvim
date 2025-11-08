@@ -19,6 +19,7 @@ This fork does the following:
 - **Chat History**: Add example messages in a command definition
 - **Tests with plenary library**
 - **Fixed statusline** integration
+- And many more features 
 
 Although this fork introduces breaking changes and a substantial rewrite, I've tried to preserve the original project's minimalist spirit — a tool that connects to AI APIs without getting in the way. The goal remains to provide simple, code-focused interactions that stay lightweight and unobtrusive, letting developers leverage LLMs while maintaining control over their workflow.
 

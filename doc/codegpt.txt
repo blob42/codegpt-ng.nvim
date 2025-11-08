@@ -1,10 +1,9 @@
-*codegpt-ng.nvim.txt*       For Neovim >= 0.8.0      Last change: 2025 June 11
-
+*codegpt.txt*           For Neovim 0.8+          Last change: 2025 November 08
 
 ==============================================================================
-Table of Contents                                         *comment.contents*
+Table of Contents                                  *codegpt-table-of-contents*
 
-1. Introduction                                                   |codegpt-ng|
+1. Introduction                                         |codegpt-introduction|
 2. Installation                                         |codegpt-installation|
 3. Usage                                                       |codegpt-usage|
   - Completion                                      |codegpt-usage-completion|
@@ -12,571 +11,826 @@ Table of Contents                                         *comment.contents*
   - Chat Mode                                        |codegpt-usage-chat-mode|
 4. Commands                                                 |codegpt-commands|
   - Builtin                                         |codegpt-commands-builtin|
-  - Range Modifier                                    |codegpt-commands-range|
-  - Other                                             |codegpt-commands-other|
-  - Custom Commands                                  |codegpt-commands-custom|
-  - Chat History                               |codegpt-commands-chat-history|
-5. Templates                                               |codegpt-templates|
-6. Configuration                                              |codegpt-config|
-  - UI                                                     |codegpt-config-ui|
-  - Status Hooks                                 |codegpt-config-status-hooks|
-  - Models                                             |codegpt-config-models|
-7. Callback Types                                     |codegpt-callback-types|
-8. Keybindings                                           |codegpt-keybindings|
-9. Example Configuration                       |codegpt-example-configuration|
-10. Lua API                                                     |codegpt-api|
-11. NG Changelog                                       |codegpt-ng-changelog|
+5. Context Injection                               |codegpt-context-injection|
+  - Buffers                                |codegpt-context-injection-buffers|
+  - Registers                            |codegpt-context-injection-registers|
+  - Modifiers                            |codegpt-context-injection-modifiers|
+  - Custom Commands                |codegpt-context-injection-custom-commands|
+6. Configuration                                       |codegpt-configuration|
+  - Global                                      |codegpt-configuration-global|
+  - Override Commands                |codegpt-configuration-override-commands|
+  - Models                                      |codegpt-configuration-models|
+  - UI                                              |codegpt-configuration-ui|
+  - Status Hooks                          |codegpt-configuration-status-hooks|
+7. Templates                                               |codegpt-templates|
+  - Examples                                      |codegpt-templates-examples|
+8. Callback Types                                     |codegpt-callback-types|
+9. Mappings                                                 |codegpt-mappings|
+10. Example Configuration                      |codegpt-example-configuration|
+11. Lua API                                                  |codegpt-lua-api|
+12. License                                                  |codegpt-license|
 
 ==============================================================================
-1. codegpt                                      		*codegpt-ng*
+1. Introduction                                         *codegpt-introduction*
 
-A minimalist plugin for Neovim that provides commands to interact with AI
-backends for code-related tasks like completion, refactoring, documentation,
-and more.
+**Codegpt-ng** is a minimalistic Neovim plugin designed for efficient,
+command-line-driven workflows. Built with vimway principles in mind, it
+supports OpenAI and Ollama APIs seamlessly, enabling powerful code assistance
+through intuitive |cmdline-mode| interactions.
 
 This is a fork of the original **CodeGPT** repository from github user
 **@dpayne**. All credit goes to him for the initial work.
 
-Although this fork introduces breaking changes and a substantial rewrite, I've
-tried to preserve the original project's minimalist spirit — a tool that
-connects to LLM APIs without getting in the way. The goal remains to provide
-simple, code-focused interactions that stay lightweight and unobtrusive,
-letting developers leverage LLMs while maintaining control over their workflow.
 
-In particular, the model definition flow was carefully designed to quickly add
-custom model profiles for specific cases and easily switch between them or
-assign them to custom commands.
+FEATURES OVERVIEW
 
-Read |codegpt-ng-changelog to learn more about the modifications in this fork.
+- Create custom commands using intuitive Lua table definitions.
+- Personalize prompts with flexible |codegpt-templates|,
+    |codegpt-context-injection| buffer content and register into the prompt
+    context.
+- Configure and tailor models to suit specific workflows or preferences.
+- API hooks for advanced code based customization.
+
 
 ==============================================================================
-2. Installation                                       *codegpt-installation*
+2. Installation                                         *codegpt-installation*
 
-The plugins 'plenary' and 'nui' are also required.
+- The plugins 'plenary' and 'nui' are also required.
 
-Install with Lazy:
+Installing with Lazy.
+
 >lua
-  {
-    "blob42/codegpt-ng.nvim",
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'MunifTanjim/nui.nvim',
-    },
-    opts = {
-      -- Configuration here
+    {
+      "blob42/codegpt-ng.nvim",
+      dependencies = {
+        'nvim-lua/plenary.nvim',
+        'MunifTanjim/nui.nvim',
+      },
+      opts = {
+        -- configuration here
+      }
     }
-  }
 <
 
-Install with Packer:
+Installing with Packer.
 
 >lua
-  use({
-     "blob42/codegpt-ng.nvim",
-     requires = {
-	"MunifTanjim/nui.nvim",
-	"nvim-lua/plenary.nvim",
-     },
-     config = function()
-	require("codegpt").setup({
-	  -- Configuration here
-	})
-     end
-  })
->
+    use({
+       "blob42/codegpt-ng.nvim",
+       requires = {
+          "MunifTanjim/nui.nvim",
+          "nvim-lua/plenary.nvim",
+       },
+       config = function()
+          require("codegpt").setup({
+            -- Configuration here
+          })
+       end
+    })
+<
+
 
 ==============================================================================
 3. Usage                                                       *codegpt-usage*
 
 The main way to call codegpt is through the top-level command `:Chat`.
-Optionally followed by a {command} and {arguments} (see |codegpt-commands|). 
+Optionally followed by a {command} and {arguments} (see |codegpt-commands|).
 
 The behavior is different depending on whether text is selected and/or
 arguments are passed.
 
-The output is displayed using on of the five builtin |codegpt-callback-types|.
+The output is displayed using on of the builtin |codegpt-callback-types|.
 
 The most common callback types are |codegpt-text_popup| and
 |codegpt-code_popup| which open a popup (or window) and display the LLM
 response. The response is streamed in real time unless the
 {config.ui.stream_output} is False.
 
+For any of the following command, if the command accepts a visual selection it
+will also accept |cmdline-ranges|
+
 
 COMPLETION                                          *codegpt-usage-completion*
 
-Use `:Chat` with text selection will trigger the `completion` command, codegpt
-will try to complete the selected code snippet.
+
+                                          *codegpt-(visual-selection)-:Chat*
+
+
+(visual selection) :Chat               Triggers the |codegpt-completion| command
+                                       with a text selection. ie. Asks the LLM
+                                       to complete the code snippet.
+
+
+
+
 
 CODE EDIT                                            *codegpt-usage-code-edit*
 
-Use `:Chat some instructions` with a text selection and the `code_edit`
-command will be invoked.
+
+                                       *codegpt-:range-Chat-instructions…*
+
+
+:[range]Chat {instructions…}         Invokes the |codegpt-code_edit| command with
+                                       the selected snippet and given
+                                       instructions.
+
+
+
+
+Note: if the first token of the instruction is an existing |codegpt-command| it
+will trigger that command instead.
 
 
 CHAT MODE                                            *codegpt-usage-chat-mode*
 
-`:Chat hello world` without any text selection will trigger the `chat` command.
 
-By default the chat mode will open a text popup and stream the LLM response in
-real time.
+                                             *codegpt-:Chat-instructions…*
+
+
+:Chat {instructions…}                Without any text selection will trigger
+                                       the `chat` command. Streaming can be
+                                       toggled on/off |codegpt-configuration|.
+
+
+
+Note: you have to input at least two words otherwise it would be considered as
+a codegpt command.
+
 
 
 ==============================================================================
 4. Commands                                                 *codegpt-commands*
 
-Use `:Chat <command> {arguments}` to explicitly call a codegpt command.  If
-there is no {arguments} and {command} matches a command, it will invoke
-that command with the given text selection. 
+Use `:Chat <command> {arguments}` to explicitly call a codegpt command. If
+there is no {arguments} and {command} matches a command, it will invoke that
+command with the given text selection.
 
-For example calling `:Chat tests` will attempt to write units for the
-selected code using the builtin `tests` command. |codegpt-commands-list|
+For example calling `:Chat tests` will attempt to write units for the selected
+code using the builtin `tests` command. |codegpt-commands-builtin|
 
 Calling `:Chat tests use foomock library` will also call the `tests` command
-but will include the `use foomock library` as arguments to that command.
+but will include the instruction: `use foomock library` as arguments to that
+command.
 
 
-BUILTIN COMMANDS                                    *codegpt-commands-builtin*
-
-Here is the full list of predefined command actions grouped by the input type
-
-  commands ~
-			
- completion		input type: text selection
- 			Will ask LLM to complete the selected code.
- 
- code_edit		input type: text selection [ + arguments ]
- 			Will ask LLM to apply the given instructions (the
- 			command args) to the selected code.
- 
- explain		input type: text selection 
- 			Will ask LLM to explain the selected code.
- 
- question		input type: text selection + arguments
- 			Will pass the commands args to LLM and return the
- 			answer in a text popup.
- 
- debug			input type: text selection	
- 			Will pass the code selection to LLM analyze it for
- 			bugs, the results will be in a text popup.
- 
- doc			input type: text selection	
- 			Will ask LLM to document the selected code.
- 
- opt			input type: text selection	
- 			Will ask LLM to optimize the selected code.
- 
- tests			input type: text selection [ + arguments ]
- 			Will ask LLM to write unit tests for the selected
- 			code.
- 
- chat			input type: command args	
-			Will pass the given command args to LLM and return
-			the response in a popup.
-
- proofread		input type: text selection [ + arguments ]	
-			Ask LLM to review the selected snippet/buffer.
+BUILTIN                                             *codegpt-commands-builtin*
 
 
-USING RANGE MODIFIER                                  *codegpt-commands-range*
+                                                        *codegpt-completion*
 
-You can use the `:%` range modifier `%<COMMAND>` to call a
-command with the full buffer content.
 
-You can use a visual range selection to call `:Chat` commands on the
-selected text.
+completion                             `input: selection`
+                                       Completes the selected code
 
-OTHER COMMAND                                         *codegpt-commands-other*
+
+                                                         *codegpt-code_edit*
+
+
+code_edit                              `input: selection [ + args ]`
+                                       Applies the given instructions
+                                       (the command args) to the selected code
+
+
+                                                           *codegpt-explain*
+
+
+explain                                `input: selection`
+                                       Explains the selected code
+
+
+                                                          *codegpt-question*
+
+
+question                               `input: selection + args`
+                                       Passes the commands args to LLM and
+                                       returns the answer in a text popup.
+
+
+                                                             *codegpt-debug*
+
+
+debug                                  `input: selection`
+                                       Analyzes the code selection for bugs.
+                                       Shows results will be in a text popup.
+
+
+                                                               *codegpt-doc*
+
+
+doc                                    `input: selection`
+                                       Documents the selected code
+
+
+                                                               *codegpt-opt*
+
+
+opt                                    `input: selection`
+                                       Optimizes the selected code
+
+
+                                                             *codegpt-tests*
+
+
+tests                                  `input: selection + args`
+                                       Writes unit tests for the selected code
+
+
+                                                              *codegpt-chat*
+
+
+chat                                   `input: args`
+                                       Passes the given command args to LLM
+                                       and returns the response in a popup
+
+
+                                                         *codegpt-proofread*
+
+
+proofread                              `input: selection [ + args ]`
+                                       Asks LLM to review the provided code
+                                       selection/buffer
+
+
+
+
+==============================================================================
+5. Context Injection                               *codegpt-context-injection*
+
+Enhance your command-line experience by injecting contextual Vim
+variables—such as open buffers and registers—directly into prompts using
+the `:Chat` command or within templates.
+
+
+BUFFERS                                    *codegpt-context-injection-buffers*
+
+Use `#{bufnr}` to insert the content of a buffer.
+
+Type `#{%<TAB>` to trigger a menu of currently open buffers, expanding into
+`#{path:bufnr}` in the command-line.
+
+
+REGISTERS                                *codegpt-context-injection-registers*
+
+Insert register contents via `""x`, where `x` is the register name. This
+dynamically expands the register’s value in place.
+
+
+EXAMPLE: ~
+
+>vim
+    :Chat summarize #{%<TAB>  -- selection via autocomplete menu
+    
+    -- References main.c buffer in the prompt
+    :Chat mycommnd take into consideration #{main.c:2}
+    
+    --Inserts content of register `a` as context
+    :'<,'>Chat fix this code given the context in: ""a
+<
+
+
+MODIFIERS                                *codegpt-context-injection-modifiers*
+
+
+RANGES ~
+
+You can use any vim |cmdline-ranges| modifier. For example using the `:%` range
+as in `%<COMMAND>` will call the command using the content of the current
+buffer as context.
+
+Using a visual range selection and calling the `:Chat` commands will insert the
+selected text as context if the `{{text_selection}}` placeholder is used by the
+command’s template.
+
+NOTE: the `cmdline` will look like `:'<,'>Chat ...`
+
+
+OTHER ~
+
+
+                                                            *codegpt-:VChat*
+
+
+:VChat                                 Like `:Chat` but use a the vertical
+                                       layout.
+
+
+                                                            *codegpt-:Chat!*
+
+
+:Chat!                                 Make the popup window persistent.
+                                       It will not close when the cursor
+                                       leaves.
+
+
+
 - `:VChat`: to temporary enforce the vertical layout.
 - `Chat!`: To make popup window persistent when the cursor leaves.
 
 
-CUSTOM COMMANDS                                      *codegpt-commands-custom*
+CUSTOM COMMANDS                    *codegpt-context-injection-custom-commands*
 
 The {commands} |codegpt-config| table can be used to override the builtin
 default commands or to define new commands.
 
 >lua
-  require("codegpt").setup({
-    --- 
+      require("codegpt").setup({
+        --- 
+        commands = {
+          -- override the completion and tests commands
+          completion = {
+    	model = "gpt-3.5-turbo",
+    	user_message_template = "This is a template...",
+    	callback_type = "replace_lines",
+          },
+          tests = {
+    	language_instructions = { java = "Use TestNG framework" },
+          },
+    
+          -- define a new `mondernize' command
+          modernize = {
+    	user_message_template = "Modernize the code...",
+    	language_instructions = { cpp = "..." }
+          }
+        }
+        ---
+      })
+<
+
+
+==============================================================================
+6. Configuration                                       *codegpt-configuration*
+
+
+GLOBAL                                          *codegpt-configuration-global*
+
+>lua
+    require("codegpt").setup({
+      connection = {
+        api_provider = "openai",  -- or "Ollama", "Azure", etc.
+        openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
+        chat_completions_url = "https://api.openai.com/v1/chat/completions",
+      },
+      models { 
+        -- model definitions
+      },
+      commands = {
+        -- Command defaults
+      },
+      ui = {
+        -- UI configuration
+      },
+      hooks = {
+        -- Status hooks
+      },
+      clear_visual_selection = true,
+    })
+<
+
+
+OVERRIDE COMMANDS                    *codegpt-configuration-override-commands*
+
+The configuration table `commands` can be used to override existing commands or
+create new ones. The overridden commands are merged with the default
+configuration.
+
+>lua
     commands = {
-      -- override the completion and tests commands
       completion = {
-	model = "gpt-3.5-turbo",
-	user_message_template = "This is a template...",
-	callback_type = "replace_lines",
+        model = "gpt-3.5-turbo",
+        user_message_template = "This is a template...",
+        callback_type = "replace_lines",
       },
       tests = {
-	language_instructions = { java = "Use TestNG framework" },
-      },
-
-      -- define a new `mondernize' command
-      modernize = {
-	user_message_template = "Modernize the code...",
-	language_instructions = { cpp = "..." }
+        language_instructions = { java = "Use TestNG framework" },
       }
     }
-    ---
-  })
 <
 
-A command can define a `system_message_template` and a `user_message_template`
-to customize the generated prompt sent to the LLM. |codegpt-templates|
 
-It can also define a `callback_type` which decides what happens with response
-received from the LLM. |codegpt-callback-types|
+MODELS                                          *codegpt-configuration-models*
 
-CHAT HISTORY                                  *codegpt-commands-chat-history*
-
-The {chat_history} parameter allows you to define a list of example messages
-that are included in the prompt sent to the LLM. This is useful for
-maintaining context or providing prior conversation history when invoking a
-command.
-
-{chat_history} is a table of messages in the format:
+The `models` table defines available LLM models for each provider. Models are
+organized by provider type and can inherit parameters from other models.
 
 >lua
-  chat_history = {
-    { role = "user", content = "Example user message" },
-    { role = "assistant", content = "Example assistant response" },
-  }
+      models = {
+        default = "gpt-3.5-turbo",              -- Global default model
+        ollama = {
+          default = "gemma3:1b",                -- Ollama default model
+          ['qwen3:4b'] = {
+            alias = "qwen3",                    -- Alias to call this model
+            max_tokens = 8192,
+            temperature = 0.8,
+    
+    	-- Custom string to append to the prompt
+            append_string = '/no_thinking', 
+          },
+        },
+        openai = {
+          ["gpt-3.5-turbo"] = {
+            alias = "gpt35",
+            max_tokens = 4096,
+            temperature = 0.8,
+          },
+        },
+      }
 <
 
-This is particularly useful to steer the LLM to output a particular format
-without using longer prompts.
 
-Example:
+INHERITANCE ~
+
+Models can inherit parameters from other models using the `from` field. For
+example:
 
 >lua
- commands = {
-    --- other commands
-  abbr = {
-    system_message_template = 'You are a helpful {{filetype}} programming \
-		assistant that abbreviates identifiers and variables..',
-    user_message_template = 'abbreviate ```{{filetype}}\n{{text_selection}}```',
-    chat_history = {
-      { role = 'user', content = 'abbreviate `configure_user_script`' },
-      { role = 'assistant', content = 'c_u_s' },
-      { role = 'user', content = 'abbreviate ```lua\nlocal = search_common_pattern = {}```\n' },
-      { role = 'assistant', content = 'local = s_c_p = {}' },
-    },
-  },
- }
+        ["gpt-foo"] = {
+          from = "gpt-3.5-turbo",  -- Inherit from openai's default
+          temperature = 0.7,       -- Override temperature
+        }
 <
 
-This will include the provided chat history when the `:Chat abbr` command is
-called on a selected code snippet, helping the LLM output more accurate
-responses.
 
-
-==============================================================================
-5. Templates                                               *codegpt-templates*
-
-The `system_message_template` and `user_message_template` can contain template
-macros. 
-
-The following template macros are available:
-
-- `{{filetype}}`  The `filetype` of the current buffer. 
-- `{{text_selection}}`  The selected text in the current buffer. 
-- `{{language}}`  The name of the programming language in the current buffer. 
-- `{{command_args}}`  Everything passed to the command as an argument, joined
-  			with spaces. 
-- `{{language_instructions}}`  The `language_instructions` value in a command
-				definition. Use this to customize a command
-				prompt based on the language.
-
-==============================================================================
-6. Configuration				              *codegpt-config*
-
->lua
-  require("codegpt").setup({
-    api = {
-      provider = "openai",  -- or "Ollama", "Azure", etc.
-      openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
-      chat_completions_url = "https://api.openai.com/v1/chat/completions",
-    },
-    models { 
-      -- model definitions
-    },
-    commands = {
-      -- Command defaults
-    },
-    ui = {
-      -- UI configuration
-    },
-    hooks = {
-      -- Status hooks
-    },
-    clear_visual_selection = true,
-  })
->
-
-
-MODELS  		         		      *codegpt-config-models* 
-
-The `models` configuration section defines available LLM models for each
-provider. Models are organized by provider type and can inherit parameters
-from other models.
-
->lua
-  models = {
-    default = "gpt-3.5-turbo",              -- Global default model
-    ollama = {
-      default = "gemma3:1b",                -- Ollama default model
-      ['qwen3:4b'] = {
-        alias = "qwen3",                    -- Alias to call this model
-        max_tokens = 8192,
-        temperature = 0.8,
-        append_string = '/no_thinking', -- Custom string to append to the prompt
-      },
-    },
-    openai = {
-      ["gpt-3.5-turbo"] = {
-        alias = "gpt35",
-        max_tokens = 4096,
-        temperature = 0.8,
-      },
-    },
-  }
-<
-
-Inheritance ~
-
-Models can inherit parameters from other models using the `from` field. For example:
-  >lua
-    ["gpt-foo"] = {
-      from = "gpt-3.5-turbo",  -- Inherit from openai's default
-      temperature = 0.7,       -- Override temperature
-    }
-  <
-
-Aliases ~
+ALIASES ~
 
 Use `alias` to create shorthand names for models.
 
-Override defaults ~
+>lua
+        ["gpt-foo"] = {
+          temperature = 1
+          alias = "foo"
+        },
+        ["gpt-bar"] = {
+          from = "foo",  -- Inherit from openai's default
+          temperature = 0.7,       -- Override temperature
+        }
+<
+
+
+OVERRIDE DEFAULTS ~
 
 Specify model parameters like `max_tokens`, `temperature`, and `append_string`
-to customize behavior.
+to customize behavior. see `lua/codegpt/config.lua` file for the full config
+specification.
 
-Model Selection ~
+
+INTERACTIVE MODEL SELECTION ~
 
 - Call `:lua codegpt.select_model()` to interactively choose a model via UI.
 
 
-UI				                          *codegpt-config-ui*
+UI                                                  *codegpt-configuration-ui*
 
 >lua
-  ui = {
-    popup_type = "popup",  -- or "horizontal", "vertical"
-    text_popup_filetype = "markdown",
-    mappings = {
-      quit = "q",
-      use_as_output = "<c-o>",
-    },
-    popup_options = {
-      relative = "editor",
-      position = "50%",
-      size = { width = "80%", height = "80%" },
-    },
-    popup_border = { style = "rounded" },
-    popup_window_options = { wrap = true, number = true },
-  }
-<
-
-STATUS HOOKS                                    *codegpt-config-status-hooks*
-
-Use the {hooks} config table to call custom functions at the start and end of
-LLM requests.
->lua
-  hooks = {
-    request_started = function() vim.cmd("hi StatusLine ctermfg=yellow") end,
-    request_finished = function() vim.cmd("hi StatusLine ctermfg=NONE") end,
-  }
-<
-
-
-==============================================================================
-7. Callback Types                                   *codegpt-callback-types*
-
-				                   *codegpt-text_popup*
-text_popup		Will display the result in a text popup window. 
-
-				                   *codegpt-code_popup*
-code_popup		Will display the results in a popup window with the
-			filetype set to the filetype of the current buffer.
-
-replace_lines		Replaces the current lines with the response. If no
-			text is selected, it will insert the response at the
-			cursor.
-
-insert_lines		Inserts the response after the current cursor line
-			without replacing any existing text.
-
-prepend_lines 	 	Inserts the response before the current lines. If no
-			text is selected, it will insert the response at the
-			beginning of the buffer.
-
-==============================================================================
-8. Keybindings                                          *codegpt-keybindings*
-
-The following default Keybindings are available inside a codegpt popup or
-window. You can customize using |codegpt-config-ui| {mappings} table.
-
-  <C-c>		Cancel the current request.
-
-  <C-o>	  	Use popup buffer content as output to replace the selected
-  		text when the command was called.
-
-  <C-i>  	Use the popup content as input to a new LLM request.
-
-  q  		cancel the current request
-
-
-
-
-==============================================================================
-9. Example Configuration                  *codegpt-example-configuration*
-
->lua
-  require("codegpt").setup({
-    -- Connection settings for API providers
-    connection = {
-      api_provider = "openai",                -- Default API provider
-      openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
-
-      -- Default OpenAI endpoint
-      chat_completions_url = "https://api.openai.com/v1/chat/completions", 
-
-     -- Ollama base URL
-      ollama_base_url = "http://localhost:11434", 
-
-      -- Can also be set with $http_proxy environment variable
-      proxy = nil,                            
-
-      -- Disable insecure connections by default
-      allow_insecure = false,                 
-    },
-
-    -- UI configuration for popups
     ui = {
-      stream_output = false,                  -- Disable streaming by default
-
-     -- Default border style
-      popup_border = { style = "rounded", padding = { 0, 1 } }, 
-
-      popup_options = nil,                    -- No additional popup options
-      text_popup_filetype = "markdown",       -- Default filetype for text
-      popup_type = "popup",                   -- Default popup type
-      horizontal_popup_size = "20%",          -- Default horizontal size
-      vertical_popup_size = "20%",            -- Default vertical size
-      spinners = { "", "", "", "", "", "" },  -- Default spinner icons
-      spinner_speed = 80,                     -- Default spinner speed
-      actions = {
-	quit = "q",                           -- Quit key
-	use_as_output = "<c-o>",              -- Use as output key
-	use_as_input = "<c-i>",               -- Use as input key
-	cancel = "<c-c>", 		    -- cancel current request
-	custom = nil,                         -- table. with custom actions
+      popup_type = "popup",  -- or "horizontal", "vertical"
+      text_popup_filetype = "markdown",
+      mappings = {
+        quit = "q",
+        use_as_output = "<c-o>",
       },
-    },
-
-    -- Model configurations grouped by provider
-    models = {
-      default = "gpt-3.5-turbo",              -- Global default model
-      ollama = {
-	default = "gemma3:1b",                -- Ollama default model
-	['qwen3:4b'] = {
-	  alias = "qwen3",                    -- Alias to call this model
-	  max_tokens = 8192,
-	  temperature = 0.8,
-	  append_string = '/no_thinking', -- Custom string to append to the prompt
-	},
+      popup_options = {
+        relative = "editor",
+        position = "50%",
+        size = { width = "80%", height = "80%" },
       },
-      openai = {
-	["gpt-3.5-turbo"] = {
-	  alias = "gpt35",
-	  max_tokens = 4096,
-	  temperature = 0.8,
-	},
-      },
-    },
-
-    -- General options
-
-      -- Clear visual selection when the command starts
-    clear_visual_selection = true,  
-
-    -- Custom hooks
-    hooks = {
-      request_started = nil,     
-      request_finished = nil,   
-    },
-
-    commands = {
-      -- Add you custom commands here. Example:
-      doc = {
-	language_instructions = { python = "Use Google style docstrings" },
-	max_tokens = 1024,
-      },
-      modernize = {
-	user_message_template = "I have the following {{language}} code: \
-	```{{filetype}}\n{{text_selection}}```\nModernize the above code. \
-	Use current best practices. Only return the code snippet and \
-	comments. {{language_instructions}}",
-	language_instructions = {
-	  cpp = "Use modern C++ syntax. Use auto where possible. Do not import \
-	  std. Use trailing return type. Use the c++11, c++14, c++17, and \
-	  c++20 standards where applicable.",
-	},
-      }
-    },
-
-    -- Global defaults for all models
-    global_defaults = {
-      max_tokens = 4096,
-      temperature = 0.7,
-      number_of_choices = 1,
-      system_message_template = "You are a {{language}} coding assistant.",
-      user_message_template = "",
-      callback_type = "replace_lines",
-      allow_empty_text_selection = false,
-      extra_params = {},
-      max_output_tokens = nil,
-    },
-  })
+      popup_border = { style = "rounded" },
+      popup_window_options = { wrap = true, number = true },
+    }
 <
 
+
+STATUS HOOKS                              *codegpt-configuration-status-hooks*
+
+>lua
+    hooks = {
+      request_started = function() vim.cmd("hi StatusLine ctermfg=yellow") end,
+      request_finished = function() vim.cmd("hi StatusLine ctermfg=NONE") end,
+    }
+<
+
+
 ==============================================================================
-10. Lua API                                                      *codegpt-api*
+7. Templates                                               *codegpt-templates*
 
-The following functions are available:
+You can use macros inside the user/system message templates when defining a
+command.
 
-`codegpt.setup({opts})`: plugin setup
-`codegpt.select_model()`: list local defined and remote available models  
-`codegpt.cancel_request()`: Cancel ongoing request
+The `system_message_template` and `user_message_template` can contain the
+following macros:
+
+
+                                                        *codegpt-{filetype}*
+
+
+{{filetype}}                           The `filetype` of the current buffer
+
+
+                                                  *codegpt-{text_selection}*
+
+
+{{text_selection}}                     The selected text in the current buffer
+
+
+                                                        *codegpt-{language}*
+
+
+{{language}}                           The name of the programming language in
+                                       the current buffer
+
+
+                                                    *codegpt-{command_args}*
+
+
+{{command_args}}                       Everything passed to the command as an
+                                       argument, joined with spaces
+
+
+                                                         *codegpt-{command}*
+
+
+{{command}}                            The command (first token after `:Chat`)
+
+
+                                           *codegpt-{language_instructions}*
+
+
+{{language_instructions}}              The found value in the
+                                       `language_instructions` map
+
+
+
+
+EXAMPLES                                          *codegpt-templates-examples*
+
+Here is are a few examples to demonstrate how to use them:
+
+>lua
+      commands = {
+      --- other commands
+        cli_helpgen = {
+          system_message_template = 'You are a documentation assistant to a \
+          software developer. Generate documentation for a CLI app using the \
+          --help flag style, including usage and options. \
+          Only output the help text and nothing else',
+    
+          user_message_template = 'Details about app:\n\n```{{filetype}}\n \
+    	{{text_selection}}```\n. {{command_args}}. {{language_instructions}}',
+    
+          model = 'gemma3:27b',
+    
+          language_instructions = {
+    	python = 'Use a standard --help flag style, including usage and \
+    	  options, with example usage if needed'.
+          },
+        },
+        rs_mod_doc = {
+    
+          system_message_template = 'You are a Rust documentation assistant. \
+          Given the provided source code, add appropriate module-level \
+          documentation that goes at the top of the file. Use the `//!` \
+          comment format and example sections as necessary. Include \
+          explanations for what each function in the module.',
+    
+          user_message_template = 'Source
+          code:\n```{{filetype}}\n{{text_selection}}\n```\n. {{command_args}}.
+          Generate the doc using module level rust comments `//!` ',
+        },
+    
+        -- dummy command to showcase the use of chat_history
+        acronym = {
+          system_message_template = 'You are a helpful {{filetype}} \
+          programming assistant that abbreviates identifiers and variables..',
+          user_message_template = 'abbr \
+          ```{{filetype}}\n{{text_selection}}```\n {{command_args}}',
+          chat_history = {
+            { role = 'user', content = 'abbreviate `configure_user_script`' },
+            { role = 'assistant', content = 'c_u_s' },
+            {
+    	  role = 'user',
+    	  content = 'abbr ```lua\nlocal = search_common_pattern = {}```\n'
+    	},
+            { role = 'assistant', content = 'local = s_c_p = {}' },
+          },
+        },
+<
 
 
 ==============================================================================
-11. Codegpt NG Changelog                                *codegpt-ng-changelog*
+8. Callback Types                                     *codegpt-callback-types*
 
-- Full support for Ollama and OpenAI API 
-- Streaming mode for real-time popup responses
-- [New table-based configuration](#example-configuration) instead of
-  global variables
-- [New commands](#other-available-commands) and added support to the `%`
-  range modifier
-- Ability to cancel current request.
-- UI Query and select local or remote model
-- Strips thinking tokens from replies if the model forgets to use
-  codeblocks
-- New callback types: `insert_lines` and `prepend_lines`
-- Model definition inheritance: Define models that inherit other model
-  parameters
-- Refactored for idiomatic Lua and neovim plugin style
-- Simplified command system with explicit configuration
-- Chat History: Add example messages in a command definition
-- Tests with plenary library
-- Fixed statusline integration
+
+                                                        *codegpt-text_popup*
+
+
+text_popup                             Displays the result in a text popup
+                                       window.
+
+
+                                                        *codegpt-code_popup*
+
+
+code_popup                             Displays the results in a popup window
+                                       with the filetype set to the filetype
+                                       of the current buffer.
+
+
+                                                     *codegpt-replace_lines*
+
+
+replace_lines                          Replaces the current lines with the
+                                       response. If no text is selected, it
+                                       will insert the response at the cursor.
+
+
+                                                      *codegpt-insert_lines*
+
+
+insert_lines                           Inserts the response after the current
+                                       cursor line without replacing any
+                                       existing text.
+
+
+                                                     *codegpt-prepend_lines*
+
+
+prepend_lines                          Inserts the response before the current
+                                       lines. If no text is selected, it will
+                                       insert the response at the beginning of
+                                       the buffer.
+
+
+
+
+==============================================================================
+9. Mappings                                                 *codegpt-mappings*
+
+The following default mappings are available inside a codegpt popup / window.
+You can customize them using the {mappings} table.
+
+
+                                                        *codegpt-<C-c>-or-q*
+
+
+<C-c> or q                             Cancel the current request
+
+
+                                                             *codegpt-<C-o>*
+
+
+<C-o>                                  Use popup buffer content as output to
+                                       replace the selected text when the
+                                       command was called.
+
+
+                                                             *codegpt-<C-i>*
+
+
+<C-i>                                  Use the popup content as input to a new
+                                       LLM request.
+
+
+
+
+==============================================================================
+10. Example Configuration                      *codegpt-example-configuration*
+
+>lua
+    require("codegpt").setup({
+      -- Connection settings for API providers
+      connection = {
+        api_provider = "openai",                -- Default API provider
+        openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
+    
+       -- Default OpenAI endpoint
+        chat_completions_url = "https://api.openai.com/v1/chat/completions",
+    
+        ollama_base_url = "http://localhost:11434",  -- Ollama base URL
+    
+        -- Can also be set with $http_proxy environment variable
+        proxy = nil,                            
+    
+        -- Disable insecure connections by default
+        allow_insecure = false,                 
+      },
+    
+      -- UI configuration for popups
+      ui = {
+        stream_output = false,                  -- Disable streaming by default
+        popup_border = {
+          style = "rounded",
+          padding = { 0, 1 }
+        },  -- Default border style
+    
+        popup_options = nil,                    -- No additional popup options
+        text_popup_filetype = "markdown",       -- Default filetype for text
+    popups
+        popup_type = "popup",                   -- Default popup type
+        horizontal_popup_size = "20%",          -- Default horizontal size
+        vertical_popup_size = "20%",            -- Default vertical size
+        spinners = { "", "", "", "", "", "" },  -- Default spinner icons
+        spinner_speed = 80,                     -- Default spinner speed
+        actions = {
+          quit = "q",                           -- Quit key
+          use_as_output = "<c-o>",              -- Use as output key
+          use_as_input = "<c-i>",               -- Use as input key
+          cancel = "<c-c>", 		    -- cancel current request
+          custom = nil,                         -- table. with custom actions
+        },
+      },
+    
+      -- Model configurations grouped by provider
+      models = {
+        default = "gpt-3.5-turbo",              -- Global default model
+        ollama = {
+          default = "gemma3:1b",                -- Ollama default model
+          ['qwen3:4b'] = {
+            alias = "qwen3",                    -- Alias to call this model
+            max_tokens = 8192,
+            temperature = 0.8,
+    
+    	-- Custom string appended to the prompt
+            append_string = '/no_think',		
+          },
+        },
+        openai = {
+          ["gpt-3.5-turbo"] = {
+            alias = "gpt35",
+            max_tokens = 4096,
+            temperature = 0.8,
+          },
+        },
+      },
+    
+      -- General options
+    
+      -- Clear visual selection when the command starts
+      clear_visual_selection = true,            
+    
+      -- Custom hooks
+      hooks = {
+        request_started = nil,                  --  
+        request_finished = nil,                 -- 
+      },
+    
+      commands = {
+        -- Add you custom commands here. Example:
+        doc = {
+          language_instructions = { python = "Use Google style docstrings" },
+          max_tokens = 1024,
+        },
+        modernize = {
+          user_message_template = "I have the following {{language}} code: \
+          ```{{filetype}}\n{{text_selection}}```\nModernize the above code. \
+          Use current best practices. Only return the code snippet \
+          and comments. {{language_instructions}}",
+    
+          language_instructions = {
+            cpp = "Use modern C++ syntax. Use auto where possible. \
+    	Do not import std. Use trailing return type. \
+    	Use the c++11, c++14, c++17, and c++20 standards where applicable.",
+          },
+        }
+      },
+    
+      -- Global defaults for all models
+      global_defaults = {
+        max_tokens = 4096,
+        temperature = 0.7,
+        number_of_choices = 1,
+        system_message_template = "You are a {{language}} coding assistant.",
+        user_message_template = "{{command}} {{command_args}}
+    	    ```{{language}}\n{{text_selection}}\n```\n",
+        callback_type = "replace_lines",
+        allow_empty_text_selection = false,
+        extra_params = {},
+        max_output_tokens = nil,
+      },
+    })
+<
+
+
+==============================================================================
+11. Lua API                                                  *codegpt-lua-api*
+
+- `setup({config})`: Setup the plugin with configuration options.
+- `select_model()`: List local defined and remote available models for selection.
+- `cancel_request()`: Cancel an ongoing request or job.
+- `stream_on()`: Enable streaming output for responses.
+- `stream_off()`: Disable streaming output for responses.
+- `debug_prompt()`: Toggle debug prompt feature to aid
+    in debugging or development.
+
+
+==============================================================================
+12. License                                                  *codegpt-license*
+
+Copyright (c) 2025 - Chakib Benziane contact@blob42.xyz
+<mailto:contact@blob42.xyz>
+
+This project is licensed under the terms of the AGPL3 license.
+
+A copy of the license is distributed with the source code of this project.
+
+------------------------------------------------------------------------------
 
 vim:tw=78:ts=8:noet:ft=help:norl:
