@@ -28,3 +28,5 @@ end, {
 	range = true,
 	nargs = "*",
 })
+
+vim.treesitter.language.register("markdown", { "codegpt", "codegpt-prompt" })

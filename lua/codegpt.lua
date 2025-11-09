@@ -1,6 +1,7 @@
 local Config = require("codegpt.config")
 local Models = require("codegpt.models")
 local Api = require("codegpt.api")
+local history = require("codegpt.history")
 local M = {}
 
 local Commands = require("codegpt.commands")
@@ -71,5 +72,6 @@ M.cancel_request = Api.cancel_job
 M.stream_on = Api.stream_on
 M.stream_off = Api.stream_off
 M.debug_prompt = Config.toggle_debug_prompt
+M.show_chat = history.show_chat
 
 return M

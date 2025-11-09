@@ -1,10 +1,6 @@
 ---@class codegpt.Config
 local M = {}
 
----@class codegpt.Chatmsg
----@field role "system"|"user"|"assistant"
----@field content string
-
 ---@class codegpt.CommandOpts
 ---@field user_message_template? string
 ---@field language_instructions? table<string, string> language instruction in the form lang = instruction

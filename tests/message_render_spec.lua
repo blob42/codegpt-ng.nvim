@@ -1,9 +1,7 @@
 local codegpt = require("codegpt")
 local config = require("codegpt.config")
-local Messages = require("codegpt.providers.messages")
+local Messages = require("codegpt.messages")
 local Commands = require("codegpt.commands")
-
-local commands = {}
 
 describe("msg template", function()
 	before_each(function()

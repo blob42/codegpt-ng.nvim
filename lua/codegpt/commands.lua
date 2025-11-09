@@ -6,6 +6,7 @@ local Providers = require("codegpt.providers")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
 local models = require("codegpt.models")
+local history = require("codegpt.history")
 
 local M = {}
 
@@ -134,7 +135,7 @@ function M.run_cmd(command, command_args, text_selection, range)
 
 	local request = provider.make_request(command, cmd_opts, command_args, text_selection, is_stream)
 	if Config.debug_prompt then
-		print(vim.fn.json_encode(request))
+		history.show_chat()
 		return
 	end
 	if is_stream then

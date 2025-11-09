@@ -3,7 +3,7 @@ local Utils = require("codegpt.utils")
 local Api = require("codegpt.api")
 local Config = require("codegpt.config")
 local errors = require("codegpt.errors")
-local Messages = require("codegpt.providers.messages")
+local Messages = require("codegpt.messages")
 
 local M = {}
 

@@ -4,7 +4,9 @@ local Api = require("codegpt.api")
 local Config = require("codegpt.config")
 local tokens = require("codegpt.tokens")
 local errors = require("codegpt.errors")
-local Messages = require("codegpt.providers.messages")
+local Messages = require("codegpt.messages")
+local history = require("codegpt.history")
+local Message = require("codegpt.message")
 
 -- TODO: handle streaming mode
 
@@ -126,6 +128,7 @@ function M.handle_response(json, cb)
 					vim.api.nvim_buf_set_mark(bufnr, "<", 0, 0, {})
 					vim.api.nvim_buf_set_mark(bufnr, ">", 0, 0, {})
 				end
+				history.add_msg(Message.Assistant(response_text))
 				cb(Utils.parse_lines(response_text))
 			end
 		else
