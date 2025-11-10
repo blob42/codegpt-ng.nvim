@@ -1,3 +1,7 @@
+---TODO: refactor ui with a clean API
+--- - better streaming handlers
+--- - separate stream handling and UI rendering
+
 ---@module 'plenary.job'
 
 local Popup = require("nui.popup")
@@ -84,6 +88,9 @@ local function create_window()
 	return ui_elem
 end
 
+-- single state for popup ui (no stream)
+local popup_ui
+
 ---@param job Job
 ---@param lines string[]
 ---@param filetype string
@@ -93,20 +100,27 @@ function M.popup(job, lines, filetype, bufnr, range)
 	if job ~= nil and job.is_shutdown then
 		return
 	end
-	local ui_elem = create_window()
-	-- mount/open the component
-	ui_elem:mount()
+	local ui_elem = popup_ui
+	if popup_ui == nil then
+		ui_elem = create_window()
+		popup_ui = ui_elem
+
+		-- mount/open the component
+		ui_elem:mount()
+	else
+		ui_elem:show()
+	end
 
 	if not (Config.persistent_override or Config.opts.ui.persistent) then
-		-- unmount component when cursor leaves buffer
+		-- hide component when cursor leaves buffer
 		ui_elem:on(event.BufLeave, function()
-			ui_elem:unmount()
+			ui_elem:hide()
 		end)
 	end
 
-	-- unmount component when key 'q'
+	-- hide component when key 'q'
 	ui_elem:map("n", Config.opts.ui.mappings.quit, function()
-		ui_elem:unmount()
+		ui_elem:hide()
 	end, { noremap = true, silent = true })
 	--
 	-- cancel job if actions.cancel is called
@@ -121,7 +135,7 @@ function M.popup(job, lines, filetype, bufnr, range)
 	-- replace lines when ctrl-o pressed
 	ui_elem:map("n", Config.opts.ui.mappings.use_as_output, function()
 		api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
-		ui_elem:unmount()
+		ui_elem:hide()
 	end)
 
 	-- selecting all the content when ctrl-i is pressed
@@ -157,29 +171,33 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 
 	if not streaming then
 		streaming = true
-		stream_ui_elem = create_window()
+		if stream_ui_elem == nil then
+			stream_ui_elem = create_window()
+			-- mount/open the component
+			stream_ui_elem:mount()
+		else
+			stream_ui_elem:show()
+		end
 
-		-- mount/open the component
-		stream_ui_elem:mount()
 		if streaming_done then
 			api.nvim_buf_set_lines(stream_ui_elem.bufnr, 0, -1, false, {})
 			streaming_done = false
 		end
 
 		if not (Config.persistent_override or Config.opts.ui.persistent) then
-			-- unmount component when cursor leaves buffer
+			-- hide component when cursor leaves buffer
 			stream_ui_elem:on(event.BufLeave, function()
 				job:shutdown()
 				streaming = false
-				stream_ui_elem:unmount()
+				stream_ui_elem:hide()
 			end)
 		end
 
-		-- unmount component when key 'q'
+		-- hide component when key 'q'
 		stream_ui_elem:map("n", Config.opts.ui.mappings.quit, function()
 			job:shutdown()
 			streaming = false
-			stream_ui_elem:unmount()
+			stream_ui_elem:hide()
 		end, { noremap = true, silent = true })
 
 		-- cancel job if actions.cancel is called
@@ -191,7 +209,7 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 		-- replace lines when ctrl-o pressed
 		stream_ui_elem:map("n", Config.opts.ui.mappings.use_as_output, function()
 			api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
-			ui_elem:unmount()
+			ui_elem:hide()
 		end)
 
 		-- selecting all the content when ctrl-i is pressed

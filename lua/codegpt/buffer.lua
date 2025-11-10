@@ -1,6 +1,8 @@
 --- Manages the display of codegpt main chat buffer.
+--- TODO!: use nui Popup
 
 local api = vim.api
+local autocmd = api.nvim_create_autocmd
 
 ---@alias codegpt.BufferType
 ---|'codegpt-prompt'
@@ -62,10 +64,18 @@ end
 ---@return codegpt.Buffer buffer
 function Buffer.create(type)
 	if Buffer._singletons[type] ~= nil then
+		print("existing buffer")
 		return Buffer._singletons[type]
 	else
+		print("creating buffer")
 		assert(type ~= nil)
 		local buf = api.nvim_create_buf(false, false)
+		-- FIX: autocmd/autogroup on buf delete remove singletons
+		-- autocmd({"BufDelete"}, {
+		-- 	group =
+		-- 	buffer = buf,
+		-- 	command
+		-- })
 
 		-- FIX: use markdown treesitter highlihgting with custom filetype
 		local bufopts = {
@@ -78,7 +88,7 @@ function Buffer.create(type)
 			api.nvim_set_option_value(key, val, { buf = buf })
 		end
 
-		-- --WIP: using prompt buffer
+		-- HACK: using prompt buffer
 		if type == "codegpt-prompt" then
 			api.nvim_set_option_value("buftype", "prompt", { buf = buf })
 			vim.fn.prompt_setcallback(buf, function(text)
