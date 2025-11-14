@@ -134,25 +134,21 @@ describe("msg template", function()
 	end)
 
 	describe("context vars", function()
-		local buf1content = [[
-function example()
+		local buf1content = [[function example()
   -- TODO: implement functionality
   return nil
-end
-]]
-		local buf2content = [[
-#include <iostream>
+end]]
+		local buf2content = [[#include <iostream>
 int main() {
     std::cout << "Hello, World!" << std::endl;
     return 0;
-}
-]]
+}]]
 		local buf1 = vim.api.nvim_create_buf(true, false)
 		local buf2 = vim.api.nvim_create_buf(true, false)
 		vim.api.nvim_set_option_value("filetype", "rust", { buf = buf1 })
 		vim.api.nvim_set_option_value("filetype", "cpp", { buf = buf2 })
-		vim.api.nvim_buf_set_lines(buf1, -1, -1, true, vim.split(buf1content, "\n"))
-		vim.api.nvim_buf_set_lines(buf2, -1, -1, true, vim.split(buf2content, "\n"))
+		vim.api.nvim_buf_set_lines(buf1, 0, -1, true, vim.split(buf1content, "\n"))
+		vim.api.nvim_buf_set_lines(buf2, 0, -1, true, vim.split(buf2content, "\n"))
 		local buf1path = "/foo/b-ar/file.rs"
 		local buf2path = "/foo/b-ar/file.cpp"
 		vim.api.nvim_buf_set_name(buf1, buf1path)
@@ -174,14 +170,15 @@ int main() {
 				.. buf1path
 				.. "\n```rust\n"
 				.. buf1content
-				.. "```\n and \nfile: "
+				.. "\n```\n and \nfile: "
 				.. buf2path
 				.. "\n```cpp\n"
 				.. buf2content
-				.. "```\nExplain in detail"
+				.. "\n```\nExplain in detail"
 
-			-- print(string.gsub(expected, " ", "@"))
+			-- print(string.gsub(messages[2].content, " ", "•"))
 			-- print("---------")
+			-- print(string.gsub(expected, " ", "•"))
 			-- print(expected)
 
 			assert(messages[2].content == expected)
@@ -208,20 +205,59 @@ int main() {
 				.. buf1path
 				.. "\n```rust\n"
 				.. buf1content
-				.. "```\n and \nfile: "
+				.. "\n```\n and \nfile: "
 				.. buf2path
 				.. "\n```cpp\n"
 				.. buf2content
-				.. "```\nExplain in detail"
-
-			-- print("---------")
-			-- print(string.gsub(expected, " ", "@"))
-			-- print(expected)
+				.. "\n```\nExplain in detail"
 
 			-- assert(true)
 			assert(messages[2].content == expected)
 		end)
+		it("parse buffer vars #{scp://host:port/file/path.ext:bufnr}", function()
+			-- Create a temporary file with content
+			local scp_file = "scp://localhost:22/home/user/myfile.txt"
+			local scp_content = [[
+Hello from SCP file!
+This is a test content.]]
 
+			-- Create buffer for the SCP file (we'll simulate it as a regular buffer)
+			local scp_buf = vim.api.nvim_create_buf(false, true)
+			vim.api.nvim_set_option_value("filetype", "text", { buf = scp_buf })
+			vim.api.nvim_buf_set_lines(scp_buf, 0, -1, false, vim.split(scp_content, "\n"))
+
+			-- Set up the command with SCP path format
+			local testcmd = {
+				user_message_template = vim.fn.printf(
+					"given these files #{%s:%d} and #{%s:%d}Explain in detail",
+					scp_file,
+					scp_buf,
+					buf1path,
+					buf1
+				),
+			}
+
+			codegpt.setup({ commands = { testcmd = testcmd } })
+
+			local cmd_opts = Commands.get_cmd_opts("testcmd")
+			local messages = Messages.generate_messages("testcmd", cmd_opts, "", "")
+
+			-- Expected content should include the SCP file content and regular buffer
+			local expected = "given these files \nfile: "
+				.. scp_file
+				.. "\n```text\n"
+				.. scp_content
+				.. "\n```\n and \nfile: "
+				.. buf1path
+				.. "\n```rust\n"
+				.. buf1content
+				.. "\n```\nExplain in detail"
+
+			-- print(string.gsub(messages[2].content, " ", "•"))
+			-- print("---------")
+			-- print(string.gsub(expected, " ", "•"))
+			assert(messages[2].content == expected)
+		end)
 		it('parse register vars ""reg', function()
 			local testcmd = {
 				user_message_template = 'content of register a: ""a and b: ""b',
