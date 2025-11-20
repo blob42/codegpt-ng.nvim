@@ -1,3 +1,7 @@
+---TODO: refactor ui with a clean API
+--- - better streaming handlers
+--- - separate stream handling and UI rendering
+
 ---@module 'plenary.job'
 
 local Popup = require("nui.popup")
@@ -108,13 +112,13 @@ function M.popup(job, lines, filetype, bufnr, range)
 	end
 
 	if not (Config.persistent_override or Config.opts.ui.persistent) then
-		-- unmount component when cursor leaves buffer
+		-- hide component when cursor leaves buffer
 		ui_elem:on(event.BufLeave, function()
 			ui_elem:hide()
 		end)
 	end
 
-	-- unmount component when key 'q'
+	-- hide component when key 'q'
 	ui_elem:map("n", Config.opts.ui.mappings.quit, function()
 		ui_elem:hide()
 	end, { noremap = true, silent = true })
@@ -181,7 +185,7 @@ function M.popup_stream(job, stream, filetype, bufnr, start_row, start_col, end_
 		end
 
 		if not (Config.persistent_override or Config.opts.ui.persistent) then
-			-- unmount component when cursor leaves buffer
+			-- hide component when cursor leaves buffer
 			stream_ui_elem:on(event.BufLeave, function()
 				job:shutdown()
 				streaming = false
