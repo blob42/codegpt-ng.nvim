@@ -138,7 +138,7 @@ end
 ---@param cmd string
 ---@param template string
 ---@param command_args string
----@param cmd_opts table
+---@param cmd_opts codegpt.CommandOpts
 ---@param is_system boolean
 function Render.render(cmd, template, command_args, text_selection, cmd_opts, is_system)
 	local bufnr = vim.api.nvim_get_current_buf()
@@ -154,8 +154,20 @@ function Render.render(cmd, template, command_args, text_selection, cmd_opts, is
 	template = safe_replace(template, "{{text_selection}}", text_selection)
 	template = safe_replace(template, "{{language}}", language)
 	template = safe_replace(template, "{{language_instructions}}", language_instructions)
-
 	template = safe_replace(template, "{{command_args}}", command_args)
+
+	if cmd_opts.chat_history then 
+		vim.iter(cmd_opts.chat_history):filter(function(msg)
+			return msg.role == "user"
+		end):each(function (msg)
+			msg.content = safe_replace(msg.content, "{{command}}", cmd)
+			msg.content = safe_replace(msg.content, "{{filetype}}", Utils.get_filetype(bufnr))
+			msg.content = safe_replace(msg.content, "{{text_selection}}", text_selection)
+			msg.content = safe_replace(msg.content, "{{language}}", language)
+			msg.content = safe_replace(msg.content, "{{language_instructions}}", language_instructions)
+			msg.content = safe_replace(msg.content, "{{command_args}}", command_args)
+		end)
+	end
 
 	-- process non system message (user) with extra context
 	if not is_system then

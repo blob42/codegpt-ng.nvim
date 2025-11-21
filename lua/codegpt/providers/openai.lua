@@ -51,7 +51,7 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 	}
 
 	if model ~= nil then
-		request = vim.tbl_extend("force", request, model.extra_params or {})
+		request = vim.tbl_extend("force", request, model.extra_params or {}, cmd_opts.extra_params or {})
 	end
 	return request
 end

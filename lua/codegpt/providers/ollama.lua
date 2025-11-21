@@ -39,7 +39,7 @@ function M.make_request(command, cmd_opts, command_args, text_selection, is_stre
 
 	-- if model is nil just use model name in query
 	if model ~= nil then
-		model_opts = vim.tbl_deep_extend("force", model or {}, model.extra_params or {})
+		model_opts = vim.tbl_deep_extend("force", model or {}, model.extra_params or {}, cmd_opts.extra_params or {})
 		model_opts.extra_params = nil
 	end
 
