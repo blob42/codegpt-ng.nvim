@@ -108,6 +108,8 @@ function M.popup(job, lines, filetype, bufnr, range)
 		-- mount/open the component
 		ui_elem:mount()
 	else
+		-- clear buffer
+		api.nvim_buf_set_lines(popup_ui.bufnr, 0, -1, false, {})
 		ui_elem:show()
 	end
 
