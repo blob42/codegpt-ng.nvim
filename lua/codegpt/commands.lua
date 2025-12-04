@@ -38,29 +38,43 @@ local function replacement(job, lines, bufnr, range)
 end
 
 M.CallbackTypes = {
+	-- Display text in a popup window (streamed or non-streamed)
 	["text_popup_stream"] = text_popup_stream,
+	-- Display text in a popup window with optional range and buffer
 	["text_popup"] = function(job, lines, bufnr, range)
 		local popup_filetype = Config.opts.ui.text_popup_filetype
 		Ui.popup(job, lines, popup_filetype, bufnr, range)
 	end,
+	-- Display code in a popup window after trimming and fixing indentation
 	["code_popup"] = function(job, lines, bufnr, range)
 		local start_row, _, end_row, _ = unpack(range)
 		lines = Utils.trim_to_code_block(lines)
 		Utils.fix_indentation(bufnr, start_row, end_row, lines)
 		Ui.popup(job, lines, Utils.get_filetype(bufnr), bufnr, range)
 	end,
+	-- Replace lines in the buffer at the specified range
 	["replace_lines"] = function(job, lines, bufnr, range)
 		lines = replacement(job, lines, bufnr, range)
 		Utils.replace_lines(lines, bufnr, range)
 	end,
+	-- Insert lines at cursor position
 	["insert_lines"] = function(job, lines, bufnr, range)
 		lines = replacement(job, lines, bufnr, range)
 		Utils.insert_lines(lines)
 	end,
+
+	-- Append lines after selection
+	["append_lines"] = function(job, lines, bufnr, range)
+		lines = replacement(job, lines, bufnr, range)
+		Utils.append_lines(lines, bufnr, range)
+	end,
+
+	-- Prepend lines before the current selection or cursor position
 	["prepend_lines"] = function(job, lines, bufnr, range)
 		lines = replacement(job, lines, bufnr, range)
 		Utils.prepend_lines(lines)
 	end,
+	-- Custom callback (user-defined behavior)
 	["custom"] = nil,
 }
 
@@ -68,9 +82,10 @@ M.CallbackTypes = {
 --- NOTE!: This function is called recursively in order do determine the final
 --- command parameters.
 ---@param cmd string
+---@param cb_override string? overriden callback type
 ---@return table opts parsed options
 ---@return boolean is_stream streaming enabled
-local function get_cmd_opts(cmd)
+local function get_cmd_opts(cmd, cb_override)
 	local opts = Config.opts.commands[cmd]
 	-- print(vim.inspect(opts))
 	local cmd_defaults = Config.opts.global_defaults
@@ -99,7 +114,8 @@ local function get_cmd_opts(cmd)
 			opts.callback = text_popup_stream
 			is_stream = true
 		else
-			opts.callback = M.CallbackTypes[opts.callback_type]
+			opts.callback_type = cb_override or opts.callback_type
+			opts.callback = M.CallbackTypes[cb_override or opts.callback_type]
 		end
 	end
 
@@ -107,18 +123,13 @@ local function get_cmd_opts(cmd)
 end
 
 ---@param command string
+---@param cmd_opts table
+---@param is_stream boolean
 ---@param command_args string
 ---@param text_selection string
 ---@param range Range4
-function M.run_cmd(command, command_args, text_selection, range)
+function M.run_cmd(command, cmd_opts, is_stream, command_args, text_selection, range)
 	local provider = Providers.get_provider()
-	local cmd_opts, is_stream = get_cmd_opts(command)
-	if cmd_opts == nil then
-		vim.notify("Command not found: " .. command, vim.log.levels.ERROR, {
-			title = "CodeGPT",
-		})
-		return
-	end
 
 	local bufnr = vim.api.nvim_get_current_buf()
 	local new_callback = nil

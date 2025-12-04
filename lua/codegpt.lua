@@ -32,13 +32,39 @@ function M.run_cmd(opts)
 		Config.persistent_override = false
 	end
 
+	local command
+	local override_cb_type = nil
+	if opts.fargs[1] == ">" then
+		override_cb_type = "append_lines"
+	elseif opts.fargs[1] == "<" then
+		override_cb_type = "prepend_lines"
+	elseif opts.fargs[1] == "-" then
+		override_cb_type = "replace_lines"
+	elseif opts.fargs[1] == "." then
+		override_cb_type = "insert_lines"
+	elseif opts.fargs[1] == "?" then
+		override_cb_type = "text_popup"
+	elseif opts.fargs[1] == "$" then
+		override_cb_type = "code_popup"
+	end
+
+	if override_cb_type ~= nil then
+		table.remove(opts.fargs, 1) -- Remove the first argument since it's an override indicator
+	end
+
 	local text_selection, range = Utils.get_selected_lines(opts)
 	local command_args = table.concat(opts.fargs, " ")
+	command = opts.fargs[1]
 
-	local command = opts.fargs[1]
 
+	local cmd_opts, is_stream = Commands.get_cmd_opts(command, override_cb_type)
+	if cmd_opts == nil then
+		vim.notify("Command not found: " .. command, vim.log.levels.ERROR, {
+			title = "CodeGPT",
+		})
+		return
+	end
 	if command_args ~= "" then
-		local cmd_opts = Commands.get_cmd_opts(command)
 		if cmd_opts ~= nil and has_command_args(cmd_opts) then
 			if cmd_opts.allow_empty_text_selection == false and text_selection == "" then
 				command = "chat"
@@ -63,7 +89,7 @@ function M.run_cmd(opts)
 		return
 	end
 
-	Commands.run_cmd(command, command_args, text_selection, range)
+	Commands.run_cmd(command, cmd_opts, is_stream, command_args, text_selection, range)
 end
 
 M.setup = Config.setup

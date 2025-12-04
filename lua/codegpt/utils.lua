@@ -98,6 +98,15 @@ function M.replace_lines(lines, bufnr, range)
 end
 
 ---@param lines string[]
+---@param bufnr integer
+---@param range Range4
+function M.append_lines(lines, bufnr, range)
+	local start_row, start_col, end_row, end_col = unpack(range)
+	-- Insert after the selected range (at the end of the selection)
+	vim.api.nvim_buf_set_lines(bufnr, end_row, end_row, false, lines)
+end
+
+---@param lines string[]
 ---@param start_token string
 ---@param stop_token string
 function M.strip_reasoning(lines, start_token, stop_token)
