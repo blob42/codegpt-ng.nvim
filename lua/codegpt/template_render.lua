@@ -151,6 +151,14 @@ function Render.render(cmd, template, command_args, text_selection, cmd_opts, is
 		language_instructions = cmd_opts.language_instructions[filetype]
 	end
 
+	-- process non system message (user) with extra context
+	-- WIP: testing also system message rendering
+
+	-- parse dyn vars for system message
+	if is_system then
+		template = inject_dynamic_variables(template)
+	end
+
 	template = safe_replace(template, "{{command}}", cmd)
 	template = safe_replace(template, "{{filetype}}", Utils.get_filetype(bufnr))
 	template = safe_replace(template, "{{text_selection}}", text_selection)
@@ -171,12 +179,15 @@ function Render.render(cmd, template, command_args, text_selection, cmd_opts, is
 		end)
 	end
 
-	-- process non system message (user) with extra context
+
+	-- second pass for user msg
 	if not is_system then
+		template = inject_dynamic_variables(template)
+		-- an other pass for embedded variables 
+		-- ex: a buffer var inside a register
 		template = inject_dynamic_variables(template)
 	end
 	template = clear_cmdline_vars(template)
-
 	return template
 end
 
