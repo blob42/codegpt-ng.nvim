@@ -30,7 +30,16 @@ M.complete_func = function(arglead, cmdline, pos)
 			end
 
 			local bufs = vim.tbl_map(function(bufid)
-				return "#{" .. vim.api.nvim_buf_get_name(bufid) .. ":" .. bufid .. "}"
+				local name = vim.api.nvim_buf_get_name(bufid)
+				local parts = vim.split(name, "%/")
+				local path
+				if #parts <= 2 then
+					path = vim.fn.join(parts, "/")
+				else
+					local stripped = vim.list_slice(parts, #parts - 1, #parts)
+					path = ".../" .. vim.fn.join(stripped, "/")
+				end
+				return "#{" .. path .. ":" .. bufid .. "}"
 			end, bufnrs)
 			cmd = vim.list_extend(cmd, bufs)
 		end

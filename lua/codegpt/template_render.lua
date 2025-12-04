@@ -62,7 +62,7 @@ end
 -- 1. buffer id: #{bufnr}
 -- 2. name + buffer id: #{path:bufnr}
 local function parse_buffers(template)
-	local filebuf_re = "#{([:/%w%.%-%+]+):(%d+)}"
+	local filebuf_re = "#{([:/%w%.%-%+%_]+):(%d+)}"
 	local bufnr_re = "#{(%d+)}"
 	local buffer_ctx_tpl = [[
 
