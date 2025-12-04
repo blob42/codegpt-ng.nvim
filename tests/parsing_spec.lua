@@ -40,4 +40,22 @@ local firstElement = myTable[1]
 		local stripped = utils.strip_reasoning(vim.split(input, "\n"), "<think>", "</think>")
 		assert(vim.deep_equal(vim.split(expected, "\n"), stripped))
 	end)
+
+	-- non reasoning version
+	it("should extract code blocks from output", function()
+		local input = [[
+```go
+func main(){
+	println("hello world")
+}
+```
+]]
+		local expected = [[
+func main(){
+	println("hello world")
+}]]
+
+		local stripped = utils.trim_to_code_block(vim.split(input, "\n"))
+		assert.equals(expected, vim.fn.join(stripped, "\n"))
+	end)
 end)
