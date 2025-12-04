@@ -2,8 +2,11 @@
 --- optionally: periodic backup to disk
 --- on load, preloads history from disk
 local Buffer = require("codegpt.buffer")
+local Config = require("codegpt.config")
 
 local M = {}
+
+local logfile_path = vim.fn.stdpath("log") .. "/codegpt.log"
 
 ---@class codegpt.History
 ---@field sessions codegpt.Messages[]
@@ -51,31 +54,55 @@ function M.add_msg(msg)
 	end
 end
 
+local function format_message(msg)
+	local template = msg.role == "system" and "# %s:\n%s\n" or "## %s:\n%s\n"
+	return vim.fn.printf(template, msg.role:upper(), msg.content)
+end
+
 function M.show_chat()
 	local chat = Buffer.chat()
 	local hist = M.history
-	if hist == nil then
+
+	if not hist then
 		print("no history")
 		return
 	end
-	local lines = {}
-	local ai_tpl = "# %s:\n%s\n"
-	local user_tpl = "## %s:\n%s\n"
-	if #hist.sessions > 0 then
-		for _, msg in ipairs(hist.sessions[#hist.sessions].messages) do
-			local content = ""
-			if msg.role == "system" or msg.role == "assistant" then
-				content = vim.fn.printf(ai_tpl, msg.role:upper(), msg.content)
-			else
-				content = vim.fn.printf(user_tpl, msg.role:upper(), msg.content)
-			end
-			vim.list_extend(lines, vim.split(content, "\n"))
-			-- print(vim.inspect(msg.role))
-			-- print(vim.inspect(msg.content))
-		end
-		chat:set_lines(lines)
-		chat:show()
+
+	if #hist.sessions == 0 then
+		return
 	end
+
+	local lines = {}
+	local last_session = hist.sessions[#hist.sessions]
+
+	for _, msg in ipairs(last_session.messages) do
+		local formatted_content = format_message(msg)
+		vim.list_extend(lines, vim.split(formatted_content, "\n"))
+	end
+
+	chat:set_lines(lines)
+	chat:show()
+end
+
+-- logs the last chat session to logfile
+function M.log_chat_to_file()
+	local logfile = io.open(logfile_path, "w+")
+	if not logfile then
+		print("Error: Could not open log file for writing")
+		return
+	end
+
+	local timestamp = os.date("%Y-%m-%d %H:%M:%S")
+	logfile:write("=== Chat Session Log - " .. timestamp .. " ===\n")
+
+	local last_session = M.history.sessions[#M.history.sessions]
+	for _, msg in ipairs(last_session.messages) do
+		local formatted_content = format_message(msg)
+		logfile:write(formatted_content)
+	end
+
+	logfile:write("\n")
+	logfile:close()
 end
 
 M.history = History.new()

@@ -164,6 +164,7 @@ end
 ---@field ui codegpt.UIOptions display parameters
 ---@field models? table<codegpt.ProviderType, ModelDef> | {default: string} Model configs grouped by provider
 ---@field write_response_to_err_log? boolean Log model answers to error buffer
+---@field log_chat_to_file? boolean Log last chat session to logfile
 ---@field clear_visual_selection? boolean Clears visual selection after completion
 ---@field hooks? { request_started?:Hook,  request_finished?:Hook}
 ---@field commands table<string, codegpt.CommandOpts> available codegpt commands

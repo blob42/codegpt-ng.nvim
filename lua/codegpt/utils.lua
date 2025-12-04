@@ -1,4 +1,5 @@
 local config = require("codegpt.config")
+local history = require("codegpt.history")
 local M = {}
 
 ---@param mode string
@@ -165,6 +166,10 @@ end
 function M.parse_lines(response_text)
 	if config.opts.write_response_to_err_log then
 		error("ChatGPT response: \n" .. response_text .. "\n")
+	end
+
+	if config.opts.log_chat_to_file then
+		history.log_chat_to_file()
 	end
 
 	return vim.fn.split(vim.trim(response_text), "\n")
