@@ -144,6 +144,7 @@ end
 ---@field api_provider? codegpt.ProviderType Type of provider for the OpenAI API endpoint
 ---@field proxy? string [protocol://]host[:port] e.g. socks5://127.0.0.1:9999
 ---@field allow_insecure? boolean Allow insecure connections?
+---@field is_llama_swap? boolean API endpoint is a llama-swap router
 
 ---@class codegpt.UIOptions
 ---@field popup_border? {style:string} Border style to use for the popup

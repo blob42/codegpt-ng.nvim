@@ -1,3 +1,4 @@
+local Curl = require("plenary.curl")
 local Config = require("codegpt.config")
 local Providers = require("codegpt.providers")
 local M = {}
@@ -187,6 +188,20 @@ function M.select_model()
 			if choice.name ~= nil and #choice.name > 0 then
 				Config.model_override = choice.name
 				print("model override = <" .. choice.name .. "> (" .. choice.model_source .. " defined)")
+
+				-- if api is llama-swap router, preload model
+				if Config.opts.connection.is_llama_swap then
+					local url = Config.opts.connection.chat_completions_url
+					assert(url, "url is nil")
+					url = url:gsub("v1", "upstream/" .. choice.name)
+
+					-- Async curl call ignoring errors by using a dummy callback that discards results/errors
+					Curl.get(url, {
+						callback = function(_, _)
+							print("llama-swap: model <" .. choice.name .. "> loaded !")
+						end,
+					})
+				end
 			end
 		end
 	end)
