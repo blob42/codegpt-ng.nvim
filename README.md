@@ -8,7 +8,7 @@ This [is a fork](docs/fork.md) of the original **CodeGPT** repository from githu
 
 <!-- panvimdoc-ignore-end -->
 
-<!-- panvimdoc-include-comment 
+<!-- panvimdoc-include-comment
 
 This is a fork of the original **CodeGPT** repository from github user
 **@dpayne**. All credit goes to him for the initial work.
@@ -20,6 +20,8 @@ This is a fork of the original **CodeGPT** repository from github user
 * Create custom commands using intuitive Lua table definitions.
 
 * Personalize prompts with flexible [templates](#templates), [context-injection](#context-injection) buffer content and register into the prompt context.
+
+* Override callback types on the fly with command suffixes (`>`, `<`, `-`, `.`, `?`, `$`).
 
 * Configure and tailor models to suit specific workflows or preferences.
 
@@ -84,7 +86,7 @@ use({
 
 # Usage
 
-The main way to call codegpt is through the top-level command `:Chat`. Optionally followed by a {command} and {arguments} (see [Commands](#commands)). 
+The main way to call codegpt is through the top-level command `:Chat` (or its shortcut `:C`). Optionally followed by a {command} and {arguments} (see [Commands](#commands)).
 
 The behavior is different depending on whether text is selected and/or arguments are passed.
 
@@ -96,7 +98,7 @@ For any of the following command, if the command accepts a visual selection it w
 
 ## Completion
 
-(visual selection) :Chat 
+(visual selection) :Chat
 : Triggers the [completion](#completion) command
 with a text selection. ie. Asks the LLM
 to complete the code snippet.
@@ -137,7 +139,7 @@ Note: you have to input at least two words otherwise it would be considered as a
 
 # Commands
 
-Use `:Chat <command> {arguments}` to explicitly call a codegpt command.  If there is no {arguments} and {command} matches a command, it will invoke that command with the given text selection. 
+Use `:Chat <command> {arguments}` to explicitly call a codegpt command.  If there is no {arguments} and {command} matches a command, it will invoke that command with the given text selection.
 
 For example calling `:Chat tests` will attempt to write units for the selected code using the builtin `tests` command. [commands-builtin](#builtin)
 
@@ -155,6 +157,24 @@ Here are a few example commands to illustrate it:
 <div align="center">
   <video controls muted src="https://github.com/user-attachments/assets/c9fb8d6f-af29-4344-b464-be33042567bf"></video>
 </div>
+
+#### Callback Override
+
+You can override the callback type on the fly by appending a suffix to the command:
+
+| Symbol | Callback        | Description                              |
+|--------|-----------------|------------------------------------------|
+| `>`    | `append_lines`  | Append response after selection          |
+| `<`    | `prepend_lines` | Prepend response before selection        |
+| `-`    | `replace_lines` | Replace the selected lines               |
+| `.`    | `insert_lines`  | Insert response at cursor                |
+| `?`    | `text_popup`    | Show response in a text popup            |
+| `$`    | `code_popup`    | Show response in a code popup            |
+
+Examples:
+- `:Chat> summarize` - appends the summary after the selection
+- `:Chat$ refactor this` - shows the refactored code in a popup
+- `:C? explain` - uses the `:C` shortcut with a text popup
 
 #### Tests
 
@@ -225,15 +245,15 @@ selection/buffer
 
 # Context Injection
 
-Enhance your command-line experience by injecting contextual Vim variables—such as open buffers and registers—directly into prompts using the `:Chat` command or within templates.
+Enhance your command-line experience by injecting contextual Vim variables-such as open buffers and registers-directly into prompts using the `:Chat` command or within templates.
 
 ## Buffers
-Use `#{bufnr}` to insert the content of a buffer. 
+Use `#{bufnr}` to insert the content of a buffer.
 
 Type `#{%<TAB>` to trigger a menu of currently open buffers, expanding into `#{path:bufnr}` in the command-line.
 
 ## Registers
-Insert register contents via `""x`, where `x` is the register name. This dynamically expands the register’s value in place.
+Insert register contents via `""x`, where `x` is the register name. This dynamically expands the register's value in place.
 
 ### Example:
 
@@ -259,6 +279,10 @@ NOTE: the `cmdline` will look like `:'<,'>Chat ...`
 
 ### Other
 
+:C
+: Shortcut for `:Chat`. Same behavior,
+ shorter to type.
+
 :VChat
 : Like `:Chat` but use a the vertical
 layout.
@@ -278,7 +302,7 @@ default commands or to define new commands.
 
 ```lua
   require("codegpt").setup({
-    --- 
+    ---
     commands = {
       -- override the completion and tests commands
       completion = {
@@ -290,14 +314,18 @@ default commands or to define new commands.
 	language_instructions = { java = "Use TestNG framework" },
       },
 
-      -- define a new `mondernize' command
+      -- define a new `modernize' command
       modernize = {
 	user_message_template = "Modernize the code...",
 	language_instructions = { cpp = "..." }
-      }
-    }
-    ---
-  })
+      },
+
+      -- use extra_params to inject custom API parameters per command
+      custom_cmd = {
+	user_message_template = "{{command_args}}",
+	extra_params = { top_p = 0.9, frequency_penalty = 0.1 },
+      },
+    )
 ```
 
 # Configuration
@@ -311,7 +339,7 @@ require("codegpt").setup({
     openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
     chat_completions_url = "https://api.openai.com/v1/chat/completions",
   },
-  models { 
+  models {
     -- model definitions
   },
   commands = {
@@ -362,7 +390,7 @@ organized by provider type and can inherit parameters from other models.
         temperature = 0.8,
 
 	-- Custom string to append to the prompt
-        append_string = '/no_thinking', 
+        append_string = '/no_thinking',
       },
     },
     openai = {
@@ -409,7 +437,30 @@ to customize behavior. see `lua/codegpt/config.lua` file for the full config spe
 
 - Call `:lua codegpt.select_model()` to interactively choose a model via UI.
 
-## UI 
+### Llama-swap Model Preloading
+
+If your API endpoint is a [llama-swap](https://github.com/ex3ndr-26/llama-swap) router,
+set `is_llama_swap = true` in the connection options. When you select a model via
+`select_model()`, the plugin will automatically send a warmup request to preload
+the model, reducing latency for the first chat completion.
+
+```lua
+connection = {
+  chat_completions_url = "https://your-router/v1/chat/completions",
+  is_llama_swap = true,
+}
+```
+
+## Chat Logging
+
+Set `log_chat_to_file = true` to log the last chat session to a file after each request.
+The log is written to `stdpath("log")/codegpt.log` with a timestamp and formatted messages.
+
+```lua
+log_chat_to_file = true,
+```
+
+## UI
 
 ```lua
 ui = {
@@ -440,7 +491,7 @@ hooks = {
 
 # Templates
 
-You can use macros inside the user/system message templates when defining a command. 
+You can use macros inside the user/system message templates when defining a command.
 
 The `system_message_template` and `user_message_template` can contain the following macros:
 
@@ -448,22 +499,43 @@ The `system_message_template` and `user_message_template` can contain the follow
 : The `filetype` of the current buffer
 
  {{text_selection}}
-: The selected text in the current buffer                             
+: The selected text in the current buffer
 
  {{language}}
 : The name of the programming language in
- the current buffer          
+ the current buffer
 
  {{command_args}}
 : Everything passed to the command as an
- argument, joined with spaces 
+ argument, joined with spaces
 
  {{command}}
 : The command (first token after `:Chat`)
 
  {{language_instructions}}
 : The found value in the 
- `language_instructions` map                  
+ `language_instructions` map
+
+
+### Recursive Dynamic Variables
+
+Dynamic variables (`""x` for registers, `#{bufnr}` for buffers) are now expanded
+recursively inside both user and system templates. This means you can embed dynamic
+variables inside other dynamic variables.
+
+For example, store a template in a register and reference it as the system template:
+
+```lua
+system_message_template = '""s',  -- Uses register "s" as the system template
+```
+
+Or nest buffer variables inside registers for flexible context injection.
+
+### Template Variables in Chat History
+
+Template variables (`{{filetype}}`, `{{text_selection}}`, `{{command_args}}`, etc.)
+are now interpolated inside `chat_history` messages. This allows you to create
+dynamic few-shot examples that adapt to the current context.
 
 
 ## Examples
@@ -524,30 +596,36 @@ Here is are a few examples to demonstrate how to use them:
 
 text_popup
 : Displays the result in a text popup
-window. 
+window.
 
 code_popup
 : Displays the results in a popup window
 with the filetype set to the filetype
-of the current buffer. 
+of the current buffer.
 
 replace_lines
 : Replaces the current lines with the
 response. If no text is selected, it
-will insert the response at the cursor. 
+will insert the response at the cursor.
 
 
 insert_lines
 : Inserts the response after the current
 cursor line without replacing any
-existing text. 
+existing text.
 
 
 prepend_lines
 : Inserts the response before the current
 lines. If no text is selected, it will
 insert the response at the beginning of
-the buffer. 
+the buffer.
+
+append_lines
+: Inserts the response after the current
+lines or selection. If no text is
+selected, it will insert after the
+cursor line.
 
 # Mappings
 
@@ -582,10 +660,13 @@ require("codegpt").setup({
     ollama_base_url = "http://localhost:11434",  -- Ollama base URL
 
     -- Can also be set with $http_proxy environment variable
-    proxy = nil,                            
+    proxy = nil,
 
     -- Disable insecure connections by default
     allow_insecure = false,                 
+
+    -- Set to true if using a llama-swap router (enables model preloading)
+    is_llama_swap = false,                  
   },
 
   -- UI configuration for popups
@@ -624,7 +705,7 @@ popups
         temperature = 0.8,
 
 	-- Custom string appended to the prompt
-        append_string = '/no_think',		
+        append_string = '/no_think',
       },
     },
     openai = {
@@ -641,10 +722,13 @@ popups
   -- Clear visual selection when the command starts
   clear_visual_selection = true,            
 
+  -- Log last chat session to logfile (stdpath("log")/codegpt.log)
+  log_chat_to_file = false,
+
   -- Custom hooks
   hooks = {
-    request_started = nil,                  --  
-    request_finished = nil,                 -- 
+    request_started = nil,                  --
+    request_finished = nil,                 --
   },
 
   commands = {
@@ -707,7 +791,7 @@ A copy of the license is distributed with the source code of this project.
 
 # Credit
 
-Darby Payne (@dpayne) <darby.payne@gmail.com> the original creator. 
+Darby Payne (@dpayne) <darby.payne@gmail.com> the original creator.
 
 And all contributors
 

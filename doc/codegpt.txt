@@ -1,4 +1,4 @@
-*codegpt.txt*           For Neovim 0.8+          Last change: 2025 November 08
+*codegpt.txt*             For Neovim 0.8+             Last change: 2026 May 12
 
 ==============================================================================
 Table of Contents                                  *codegpt-table-of-contents*
@@ -20,6 +20,7 @@ Table of Contents                                  *codegpt-table-of-contents*
   - Global                                      |codegpt-configuration-global|
   - Override Commands                |codegpt-configuration-override-commands|
   - Models                                      |codegpt-configuration-models|
+  - Chat Logging                          |codegpt-configuration-chat-logging|
   - UI                                              |codegpt-configuration-ui|
   - Status Hooks                          |codegpt-configuration-status-hooks|
 7. Templates                                               |codegpt-templates|
@@ -48,6 +49,8 @@ FEATURES OVERVIEW
 - Personalize prompts with flexible |codegpt-templates|,
     |codegpt-context-injection| buffer content and register into the prompt
     context.
+- Override callback types on the fly with command suffixes (`>`, `<`, `-`, `.`,
+    `?`, `$`).
 - Configure and tailor models to suit specific workflows or preferences.
 - API hooks for advanced code based customization.
 
@@ -93,8 +96,9 @@ Installing with Packer.
 ==============================================================================
 3. Usage                                                       *codegpt-usage*
 
-The main way to call codegpt is through the top-level command `:Chat`.
-Optionally followed by a {command} and {arguments} (see |codegpt-commands|).
+The main way to call codegpt is through the top-level command `:Chat` (or its
+shortcut `:C`). Optionally followed by a {command} and {arguments} (see
+|codegpt-commands|).
 
 The behavior is different depending on whether text is selected and/or
 arguments are passed.
@@ -256,9 +260,9 @@ proofread                              `input: selection [ + args ]`
 ==============================================================================
 5. Context Injection                               *codegpt-context-injection*
 
-Enhance your command-line experience by injecting contextual Vim
-variables—such as open buffers and registers—directly into prompts using
-the `:Chat` command or within templates.
+Enhance your command-line experience by injecting contextual Vim variables-such
+as open buffers and registers-directly into prompts using the `:Chat` command
+or within templates.
 
 
 BUFFERS                                    *codegpt-context-injection-buffers*
@@ -307,6 +311,13 @@ NOTE: the `cmdline` will look like `:'<,'>Chat ...`
 OTHER ~
 
 
+                                                                *codegpt-:C*
+
+
+:C                                     Shortcut for `:Chat`. Same behavior,
+                                       shorter to type.
+
+
                                                             *codegpt-:VChat*
 
 
@@ -334,7 +345,7 @@ default commands or to define new commands.
 
 >lua
       require("codegpt").setup({
-        --- 
+        ---
         commands = {
           -- override the completion and tests commands
           completion = {
@@ -346,14 +357,18 @@ default commands or to define new commands.
     	language_instructions = { java = "Use TestNG framework" },
           },
     
-          -- define a new `mondernize' command
+          -- define a new `modernize' command
           modernize = {
     	user_message_template = "Modernize the code...",
     	language_instructions = { cpp = "..." }
-          }
-        }
-        ---
-      })
+          },
+    
+          -- use extra_params to inject custom API parameters per command
+          custom_cmd = {
+    	user_message_template = "{{command_args}}",
+    	extra_params = { top_p = 0.9, frequency_penalty = 0.1 },
+          },
+        )
 <
 
 
@@ -370,7 +385,7 @@ GLOBAL                                          *codegpt-configuration-global*
         openai_api_key = vim.fn.getenv("OPENAI_API_KEY"),
         chat_completions_url = "https://api.openai.com/v1/chat/completions",
       },
-      models { 
+      models {
         -- model definitions
       },
       commands = {
@@ -423,7 +438,7 @@ organized by provider type and can inherit parameters from other models.
             temperature = 0.8,
     
     	-- Custom string to append to the prompt
-            append_string = '/no_thinking', 
+            append_string = '/no_thinking',
           },
         },
         openai = {
@@ -476,6 +491,32 @@ specification.
 INTERACTIVE MODEL SELECTION ~
 
 - Call `:lua codegpt.select_model()` to interactively choose a model via UI.
+
+
+LLAMA-SWAP MODEL PRELOADING ~
+
+If your API endpoint is a llama-swap <https://github.com/ex3ndr-26/llama-swap>
+router, set `is_llama_swap = true` in the connection options. When you select a
+model via `select_model()`, the plugin will automatically send a warmup request
+to preload the model, reducing latency for the first chat completion.
+
+>lua
+    connection = {
+      chat_completions_url = "https://your-router/v1/chat/completions",
+      is_llama_swap = true,
+    }
+<
+
+
+CHAT LOGGING                              *codegpt-configuration-chat-logging*
+
+Set `log_chat_to_file = true` to log the last chat session to a file after each
+request. The log is written to `stdpath("log")/codegpt.log` with a timestamp
+and formatted messages.
+
+>lua
+    log_chat_to_file = true,
+<
 
 
 UI                                                  *codegpt-configuration-ui*
@@ -558,6 +599,29 @@ following macros:
                                        `language_instructions` map
 
 
+
+
+RECURSIVE DYNAMIC VARIABLES ~
+
+Dynamic variables (`""x` for registers, `#{bufnr}` for buffers) are now
+expanded recursively inside both user and system templates. This means you can
+embed dynamic variables inside other dynamic variables.
+
+For example, store a template in a register and reference it as the system
+template:
+
+>lua
+    system_message_template = '""s',  -- Uses register "s" as the system template
+<
+
+Or nest buffer variables inside registers for flexible context injection.
+
+
+TEMPLATE VARIABLES IN CHAT HISTORY ~
+
+Template variables (`{{filetype}}`, `{{text_selection}}`, `{{command_args}}`,
+etc.) are now interpolated inside `chat_history` messages. This allows you to
+create dynamic few-shot examples that adapt to the current context.
 
 
 EXAMPLES                                          *codegpt-templates-examples*
@@ -659,6 +723,15 @@ prepend_lines                          Inserts the response before the current
                                        the buffer.
 
 
+                                                      *codegpt-append_lines*
+
+
+append_lines                           Inserts the response after the current
+                                       lines or selection. If no text is
+                                       selected, it will insert after the
+                                       cursor line.
+
+
 
 
 ==============================================================================
@@ -707,10 +780,13 @@ You can customize them using the {mappings} table.
         ollama_base_url = "http://localhost:11434",  -- Ollama base URL
     
         -- Can also be set with $http_proxy environment variable
-        proxy = nil,                            
+        proxy = nil,
     
         -- Disable insecure connections by default
         allow_insecure = false,                 
+    
+        -- Set to true if using a llama-swap router (enables model preloading)
+        is_llama_swap = false,                  
       },
     
       -- UI configuration for popups
@@ -749,7 +825,7 @@ You can customize them using the {mappings} table.
             temperature = 0.8,
     
     	-- Custom string appended to the prompt
-            append_string = '/no_think',		
+            append_string = '/no_think',
           },
         },
         openai = {
@@ -766,10 +842,13 @@ You can customize them using the {mappings} table.
       -- Clear visual selection when the command starts
       clear_visual_selection = true,            
     
+      -- Log last chat session to logfile (stdpath("log")/codegpt.log)
+      log_chat_to_file = false,
+    
       -- Custom hooks
       hooks = {
-        request_started = nil,                  --  
-        request_finished = nil,                 -- 
+        request_started = nil,                  --
+        request_finished = nil,                 --
       },
     
       commands = {
