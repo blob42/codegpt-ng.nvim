@@ -11,6 +11,7 @@ Table of Contents                                  *codegpt-table-of-contents*
   - Chat Mode                                        |codegpt-usage-chat-mode|
 4. Commands                                                 |codegpt-commands|
   - Builtin                                         |codegpt-commands-builtin|
+  - Callback Override                     |codegpt-commands-callback-override|
 5. Context Injection                               |codegpt-context-injection|
   - Buffers                                |codegpt-context-injection-buffers|
   - Registers                            |codegpt-context-injection-registers|
@@ -255,6 +256,41 @@ proofread                              `input: selection [ + args ]`
                                        selection/buffer
 
 
+
+
+CALLBACK OVERRIDE                         *codegpt-commands-callback-override*
+
+You can override the callback type on the fly by appending a suffix to the
+command:
+
+  Symbol   Callback        Description
+  -------- --------------- -----------------------------------
+  >        append_lines    Append response after selection
+  <        prepend_lines   Prepend response before selection
+  -        replace_lines   Replace the selected lines
+  .        insert_lines    Insert response at cursor
+  ?        text_popup      Show response in a text popup
+  $        code_popup      Show response in a code popup
+
+EXAMPLES: ~
+
+>vim
+    :Chat> summarize
+<
+
+Appends the summary after the selection
+
+>vim
+    :Chat$ refactor this
+<
+
+Shows the refactored code in a code popup
+
+>vim
+    `:C? explain
+<
+
+Calls the `explain` command using the `:C` shortcut with a text popup
 
 
 ==============================================================================

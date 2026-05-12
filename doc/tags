@@ -1,4 +1,5 @@
 codegpt-(visual-selection)-:Chat	codegpt.txt	/*codegpt-(visual-selection)-:Chat*
+codegpt-:C	codegpt.txt	/*codegpt-:C*
 codegpt-:Chat!	codegpt.txt	/*codegpt-:Chat!*
 codegpt-:Chat-instructions…	codegpt.txt	/*codegpt-:Chat-instructions…*
 codegpt-:VChat	codegpt.txt	/*codegpt-:VChat*
@@ -6,14 +7,17 @@ codegpt-:range-Chat-instructions…	codegpt.txt	/*codegpt-:range-Chat-instructio
 codegpt-<C-c>-or-q	codegpt.txt	/*codegpt-<C-c>-or-q*
 codegpt-<C-i>	codegpt.txt	/*codegpt-<C-i>*
 codegpt-<C-o>	codegpt.txt	/*codegpt-<C-o>*
+codegpt-append_lines	codegpt.txt	/*codegpt-append_lines*
 codegpt-callback-types	codegpt.txt	/*codegpt-callback-types*
 codegpt-chat	codegpt.txt	/*codegpt-chat*
 codegpt-code_edit	codegpt.txt	/*codegpt-code_edit*
 codegpt-code_popup	codegpt.txt	/*codegpt-code_popup*
 codegpt-commands	codegpt.txt	/*codegpt-commands*
 codegpt-commands-builtin	codegpt.txt	/*codegpt-commands-builtin*
+codegpt-commands-callback-override	codegpt.txt	/*codegpt-commands-callback-override*
 codegpt-completion	codegpt.txt	/*codegpt-completion*
 codegpt-configuration	codegpt.txt	/*codegpt-configuration*
+codegpt-configuration-chat-logging	codegpt.txt	/*codegpt-configuration-chat-logging*
 codegpt-configuration-global	codegpt.txt	/*codegpt-configuration-global*
 codegpt-configuration-models	codegpt.txt	/*codegpt-configuration-models*
 codegpt-configuration-override-commands	codegpt.txt	/*codegpt-configuration-override-commands*

@@ -158,24 +158,6 @@ Here are a few example commands to illustrate it:
   <video controls muted src="https://github.com/user-attachments/assets/c9fb8d6f-af29-4344-b464-be33042567bf"></video>
 </div>
 
-#### Callback Override
-
-You can override the callback type on the fly by appending a suffix to the command:
-
-| Symbol | Callback        | Description                              |
-|--------|-----------------|------------------------------------------|
-| `>`    | `append_lines`  | Append response after selection          |
-| `<`    | `prepend_lines` | Prepend response before selection        |
-| `-`    | `replace_lines` | Replace the selected lines               |
-| `.`    | `insert_lines`  | Insert response at cursor                |
-| `?`    | `text_popup`    | Show response in a text popup            |
-| `$`    | `code_popup`    | Show response in a code popup            |
-
-Examples:
-- `:Chat> summarize` - appends the summary after the selection
-- `:Chat$ refactor this` - shows the refactored code in a popup
-- `:C? explain` - uses the `:C` shortcut with a text popup
-
 #### Tests
 
 In the below example `:Chat tests` will attempt to write units for the selected code.
@@ -241,6 +223,40 @@ proofread
   Asks LLM to review the provided code
 selection/buffer
 
+
+## Callback Override
+
+You can override the callback type on the fly by appending a suffix to the command:
+
+| Symbol | Callback        | Description                              |
+|--------|-----------------|------------------------------------------|
+| `>`    | `append_lines`  | Append response after selection          |
+| `<`    | `prepend_lines` | Prepend response before selection        |
+| `-`    | `replace_lines` | Replace the selected lines               |
+| `.`    | `insert_lines`  | Insert response at cursor                |
+| `?`    | `text_popup`    | Show response in a text popup            |
+| `$`    | `code_popup`    | Show response in a code popup            |
+
+
+### Examples:
+
+```vim
+:Chat> summarize
+```
+
+Appends the summary after the selection
+
+```vim
+:Chat$ refactor this
+```
+
+Shows the refactored code in a code popup
+
+```vim
+`:C? explain
+```
+
+Calls the `explain` command using the `:C` shortcut with a text popup
 
 
 # Context Injection
